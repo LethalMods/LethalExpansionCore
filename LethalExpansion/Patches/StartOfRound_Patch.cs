@@ -27,12 +27,13 @@ namespace LethalExpansion.Patches
         [HarmonyPostfix]
         static void OnPlayerConnectedClientRpc_Postfix(StartOfRound __instance, ulong clientId, int connectedPlayers, ulong[] connectedPlayerIdsOrdered, int assignedPlayerObjectId, int serverMoneyAmount, int levelID, int profitQuota, int timeUntilDeadline, int quotaFulfilled, int randomSeed)
         {
-            if (!LethalExpansion.ishost)
+            if (NetworkManager.Singleton.IsServer)
             {
-                LethalExpansion.ishost = false;
-                LethalExpansion.sessionWaiting = false;
-                LethalExpansion.Log.LogInfo("LethalExpansion Client Started." + __instance.NetworkManager.LocalClientId);
+                return;
             }
+
+            LethalExpansion.sessionWaiting = false;
+            LethalExpansion.Log.LogInfo($"LethalExpansion Client Started. {__instance.NetworkManager.LocalClientId}");
         }
 
         [HarmonyPatch(nameof(StartOfRound.SetMapScreenInfoToCurrentLevel))]

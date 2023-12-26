@@ -10,7 +10,6 @@ namespace LethalExpansion.Patches
         [HarmonyPostfix]
         public static void StartHosting_Postfix(MenuManager __instance)
         {
-            LethalExpansion.ishost = true;
             LethalExpansion.sessionWaiting = false;
             LethalExpansion.Log.LogInfo("LethalExpansion Host Started.");
         }
@@ -19,7 +18,6 @@ namespace LethalExpansion.Patches
         [HarmonyPostfix]
         public static void StartAClient_Postfix(MenuManager __instance)
         {
-            LethalExpansion.ishost = false;
             LethalExpansion.sessionWaiting = false;
             LethalExpansion.Log.LogInfo("LethalExpansion LAN Client Started.");
         }
@@ -31,7 +29,7 @@ namespace LethalExpansion.Patches
             if (__instance.versionNumberText != null)
             {
                 __instance.versionNumberText.enableWordWrapping = false;
-                __instance.versionNumberText.text += $"     LEv{LethalExpansion.ModVersion.ToString()}";
+                __instance.versionNumberText.text += $"     LE(core)v{LethalExpansion.ModVersion}";
             }
         }
     }

@@ -74,7 +74,6 @@ namespace LethalExpansion
         public static readonly int[] CompatibleGameVersions = {45};
 
         public static bool sessionWaiting = true;
-        public static bool ishost = false;
         public static bool alreadypatched = false;
         public static bool isInGame = false;
 
@@ -214,7 +213,6 @@ namespace LethalExpansion
         void OnMainMenuLoaded(Scene scene)
         {
             sessionWaiting = true;
-            ishost = false;
             alreadypatched = false;
 
             LethalExpansion.delayedLevelChange = -1;
