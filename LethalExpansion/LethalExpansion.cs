@@ -74,14 +74,11 @@ namespace LethalExpansion
         public static readonly int[] CompatibleGameVersions = {45};
 
         public static bool sessionWaiting = true;
-        public static bool hostDataWaiting = true;
         public static bool ishost = false;
         public static bool alreadypatched = false;
         public static bool isInGame = false;
 
         public static int delayedLevelChange = -1;
-
-        public static string lastKickReason = string.Empty;
 
         private static readonly Harmony Harmony = new Harmony(PluginGUID);
         public static ManualLogSource Log = new ManualLogSource(PluginName);
@@ -124,7 +121,6 @@ namespace LethalExpansion
             Harmony.PatchAll(typeof(Terminal_Patch));
             Harmony.PatchAll(typeof(MenuManager_Patch));
             Harmony.PatchAll(typeof(RoundManager_Patch));
-            Harmony.PatchAll(typeof(HUDManager_Patch));
             Harmony.PatchAll(typeof(StartOfRound_Patch));
             Harmony.PatchAll(typeof(EntranceTeleport_Patch));
             Harmony.PatchAll(typeof(AudioReverbTrigger_Patch));
@@ -218,7 +214,6 @@ namespace LethalExpansion
         void OnMainMenuLoaded(Scene scene)
         {
             sessionWaiting = true;
-            hostDataWaiting = true;
             ishost = false;
             alreadypatched = false;
 
@@ -227,11 +222,6 @@ namespace LethalExpansion
             isInGame = false;
 
             AssetGather.Instance.AddAudioMixer(GameObject.Find("Canvas/MenuManager").GetComponent<AudioSource>().outputAudioMixerGroup.audioMixer);
-
-            if (lastKickReason != null && lastKickReason.Length > 0)
-            {
-                Console.WriteLine($"You have been kicked\r\nReason: {lastKickReason}");
-            }
         }
 
         void OnSampleSceneRelayLoaded(Scene scene)
@@ -457,15 +447,6 @@ namespace LethalExpansion
             while (sessionWaiting)
             {
                 await Task.Delay(1000);
-            }
-
-            if (!ishost)
-            {
-                while (!sessionWaiting && hostDataWaiting)
-                {
-                    NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "hostconfig", string.Empty, 0);
-                    await Task.Delay(3000);
-                }
             }
 
             if (!alreadypatched)

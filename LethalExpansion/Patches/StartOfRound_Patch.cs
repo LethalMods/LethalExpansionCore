@@ -4,7 +4,6 @@ using System;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using static LethalExpansion.Utils.NetworkPacketManager;
 using static UnityEngine.Rendering.HighDefinition.ScalableSettingLevelParameter;
 
 namespace LethalExpansion.Patches
@@ -33,10 +32,6 @@ namespace LethalExpansion.Patches
                 LethalExpansion.ishost = false;
                 LethalExpansion.sessionWaiting = false;
                 LethalExpansion.Log.LogInfo("LethalExpansion Client Started." + __instance.NetworkManager.LocalClientId);
-            }
-            else
-            {
-                NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "clientinfo", string.Empty, (long)clientId);
             }
         }
 
