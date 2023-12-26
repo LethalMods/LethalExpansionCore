@@ -40,7 +40,7 @@ namespace LethalExpansion
 
         public static NetworkManager networkManager;
 
-        public GameObject SpaceLight;
+        // TODO: What are these for?
         public GameObject terrainfixer;
         public static Transform currentWaterSurface;
 
@@ -120,7 +120,6 @@ namespace LethalExpansion
             }
             else if (scene.name == "CompanyBuilding")
             {
-                SpaceLight.SetActive(false);
                 terrainfixer.SetActive(false);
             }
             else if (scene.name == "SampleSceneRelay")
@@ -129,7 +128,6 @@ namespace LethalExpansion
             }
             else if (scene.name.StartsWith("Level"))
             {
-                SpaceLight.SetActive(false);
                 terrainfixer.SetActive(false);
             }
             else if (scene.name == "InitSceneLaunchOptions" && isInGame)
@@ -152,15 +150,6 @@ namespace LethalExpansion
 
         void OnSampleSceneRelayLoaded(Scene scene)
         {
-            SpaceLight = Instantiate(AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>("Assets/Mods/LethalExpansion/Prefabs/SpaceLight.prefab"));
-            SceneManager.MoveGameObjectToScene(SpaceLight, scene);
-
-            Mesh FixedMonitorWallMesh = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>("Assets/Mods/LethalExpansion/Meshes/MonitorWall.fbx").GetComponent<MeshFilter>().mesh;
-            GameObject MonitorWall = GameObject.Find("Environment/HangarShip/ShipModels2b/MonitorWall/Cube");
-            MonitorWall.GetComponent<MeshFilter>().mesh = FixedMonitorWallMesh;
-
-            MeshRenderer MonitorWallMeshRenderer = MonitorWall.GetComponent<MeshRenderer>();
-
             GameObject waterSurface = GameObject.Instantiate(GameObject.Find("Systems/GameSystems/TimeAndWeather/Flooding"));
             Destroy(waterSurface.GetComponent<FloodWeather>());
             waterSurface.name = "WaterSurface";
@@ -168,28 +157,7 @@ namespace LethalExpansion
             waterSurface.transform.Find("Water").GetComponent<MeshFilter>().sharedMesh = null;
             SpawnPrefab.Instance.waterSurface = waterSurface;
 
-            /*Material BlueScreenMaterial = new Material(MonitorWallMeshRenderer.materials[1]);
-            BlueScreenMaterial.SetColor("_BaseColor", new Color32(0,0,80, 255));*/
-
-            Material[] materialArray = new Material[9];
-            materialArray[0] = MonitorWallMeshRenderer.materials[0];
-            materialArray[1] = MonitorWallMeshRenderer.materials[1];
-            materialArray[2] = MonitorWallMeshRenderer.materials[1];
-            //materialArray[2] = BlueScreenMaterial;
-            materialArray[3] = MonitorWallMeshRenderer.materials[1];
-            materialArray[4] = MonitorWallMeshRenderer.materials[1];
-            //materialArray[4] = BlueScreenMaterial;
-            materialArray[5] = MonitorWallMeshRenderer.materials[1];
-            materialArray[6] = MonitorWallMeshRenderer.materials[1];
-            materialArray[7] = MonitorWallMeshRenderer.materials[1];
-            materialArray[8] = MonitorWallMeshRenderer.materials[2];
-
-            MonitorWallMeshRenderer.materials = materialArray;
-
             StartOfRound.Instance.screenLevelDescription.gameObject.AddComponent<AutoScrollText>();
-
-            /*MonitorWall.transform.Find("Canvas (1)/MainContainer/BG").gameObject.SetActive(false);
-            MonitorWall.transform.Find("Canvas (1)/MainContainer/BG (1)").gameObject.SetActive(false);*/
 
             AssetGather.Instance.AddAudioMixer(GameObject.Find("Systems/Audios/DiageticBackground").GetComponent<AudioSource>().outputAudioMixerGroup.audioMixer);
 
@@ -222,7 +190,6 @@ namespace LethalExpansion
 
         void OnInitSceneLaunchOptionsLoaded(Scene scene)
         {
-            SpaceLight.SetActive(false);
             terrainfixer.SetActive(false);
             foreach (GameObject obj in scene.GetRootGameObjects())
             {
@@ -354,11 +321,6 @@ namespace LethalExpansion
 
             if (scene.name.StartsWith("Level") || scene.name == "CompanyBuilding" || (scene.name == "InitSceneLaunchOptions" && isInGame))
             {
-                if (SpaceLight != null)
-                {
-                    SpaceLight.SetActive(true);
-                }
-
                 if (currentWaterSurface != null)
                 {
                     currentWaterSurface = null;
