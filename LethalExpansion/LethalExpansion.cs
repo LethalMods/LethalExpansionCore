@@ -310,7 +310,7 @@ namespace LethalExpansion
                 }
             }
 
-            waitForSession().GetAwaiter();
+            WaitForSession().GetAwaiter();
 
             isInGame = true;
         }
@@ -324,8 +324,8 @@ namespace LethalExpansion
                 obj.SetActive(false);
             }
 
-            //StartCoroutine(LoadCustomMoon(scene));
-            LoadCustomMoon2(scene);
+            // StartCoroutine(LoadCustomMoon(scene));
+            LoadCustomMoon(scene);
 
             String[] _tmp = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
             foreach (string s in _tmp)
@@ -340,25 +340,25 @@ namespace LethalExpansion
                 }
             }
 
-            GameObject DropShip = GameObject.Find("ItemShipAnimContainer");
-            if (DropShip != null)
+            GameObject dropShip = GameObject.Find("ItemShipAnimContainer");
+            if (dropShip != null)
             {
-                var ItemShip = DropShip.transform.Find("ItemShip");
-                if (ItemShip != null)
+                var itemShip = dropShip.transform.Find("ItemShip");
+                if (itemShip != null)
                 {
-                    ItemShip.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+                    itemShip.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                 }
 
-                var ItemShipMusicClose = DropShip.transform.Find("ItemShip/Music");
-                if (ItemShipMusicClose != null)
+                var itemShipMusicClose = dropShip.transform.Find("ItemShip/Music");
+                if (itemShipMusicClose != null)
                 {
-                    ItemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+                    itemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                 }
 
-                var ItemShipMusicFar = DropShip.transform.Find("ItemShip/Music/Music (1)");
-                if (ItemShipMusicFar != null)
+                var itemShipMusicFar = dropShip.transform.Find("ItemShip/Music/Music (1)");
+                if (itemShipMusicFar != null)
                 {
-                    ItemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+                    itemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                 }
             }
 
@@ -378,7 +378,7 @@ namespace LethalExpansion
                 runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
                 UnityNavMeshAdapter dungeonNavMesh = dungeonGenerator.AddComponent<UnityNavMeshAdapter>();
                 dungeonNavMesh.BakeMode = UnityNavMeshAdapter.RuntimeNavMeshBakeMode.FullDungeonBake;
-                dungeonNavMesh.LayerMask = 35072; //256 + 2048 + 32768 = 35072
+                dungeonNavMesh.LayerMask = 35072; // 256 + 2048 + 32768 = 35072
                 SceneManager.MoveGameObjectToScene(dungeonGenerator, scene);
             }
             else
@@ -391,22 +391,22 @@ namespace LethalExpansion
 
             runtimeDungeon.Generator.DungeonFlow.GlobalProps.First(p => p.ID == 1231).Count = new IntRange(RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite(), RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite());
 
-            GameObject OutOfBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            OutOfBounds.name = "OutOfBounds";
-            OutOfBounds.layer = 13;
-            OutOfBounds.transform.position = new Vector3(0, -300, 0);
-            OutOfBounds.transform.localScale = new Vector3(1000, 5, 1000);
-            BoxCollider boxCollider = OutOfBounds.GetComponent<BoxCollider>();
+            GameObject outOfBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            outOfBounds.name = "OutOfBounds";
+            outOfBounds.layer = 13;
+            outOfBounds.transform.position = new Vector3(0, -300, 0);
+            outOfBounds.transform.localScale = new Vector3(1000, 5, 1000);
+            BoxCollider boxCollider = outOfBounds.GetComponent<BoxCollider>();
             boxCollider.isTrigger = true;
-            OutOfBounds.AddComponent<OutOfBoundsTrigger>();
-            Rigidbody rigidbody = OutOfBounds.AddComponent<Rigidbody>();
+            outOfBounds.AddComponent<OutOfBoundsTrigger>();
+            Rigidbody rigidbody = outOfBounds.AddComponent<Rigidbody>();
             rigidbody.useGravity = false;
             rigidbody.isKinematic = true;
             rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            SceneManager.MoveGameObjectToScene(OutOfBounds, scene);
+            SceneManager.MoveGameObjectToScene(outOfBounds, scene);
         }
 
-        void LoadCustomMoon2(Scene scene)
+        private void LoadCustomMoon(Scene scene)
         {
             GameObject moonPrefab = Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab;
             if (moonPrefab == null || moonPrefab.transform == null)
@@ -440,91 +440,6 @@ namespace LethalExpansion
             }
         }
 
-        IEnumerator LoadCustomMoon(Scene scene)
-        {
-            yield return null;
-
-            LoadCustomMoon2(scene);
-
-            String[] _tmp = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
-            foreach (string s in _tmp)
-            {
-                if (GameObject.FindGameObjectWithTag(s) == null || GameObject.FindGameObjectsWithTag(s).Any(o => o.scene.name != "InitSceneLaunchOptions"))
-                {
-                    GameObject obj = new GameObject();
-                    obj.name = s;
-                    obj.tag = s;
-                    obj.transform.position = new Vector3(0, -200, 0);
-                    SceneManager.MoveGameObjectToScene(obj, scene);
-                }
-            }
-
-            GameObject DropShip = GameObject.Find("ItemShipAnimContainer");
-            if (DropShip != null)
-            {
-                var ItemShip = DropShip.transform.Find("ItemShip");
-                if (ItemShip != null)
-                {
-                    ItemShip.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
-                }
-
-                var ItemShipMusicClose = DropShip.transform.Find("ItemShip/Music");
-                if (ItemShipMusicClose != null)
-                {
-                    ItemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
-                }
-
-                var ItemShipMusicFar = DropShip.transform.Find("ItemShip/Music/Music (1)");
-                if (ItemShipMusicFar != null)
-                {
-                    ItemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
-                }
-            }
-
-            RuntimeDungeon runtimeDungeon = GameObject.FindObjectOfType<RuntimeDungeon>(false);
-            if (runtimeDungeon == null)
-            {
-                GameObject dungeonGenerator = new GameObject();
-                dungeonGenerator.name = "DungeonGenerator";
-                dungeonGenerator.tag = "DungeonGenerator";
-                dungeonGenerator.transform.position = new Vector3(0, -200, 0);
-                runtimeDungeon = dungeonGenerator.AddComponent<RuntimeDungeon>();
-                runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
-                runtimeDungeon.Generator.LengthMultiplier = 0.8f;
-                runtimeDungeon.Generator.PauseBetweenRooms = 0.2f;
-                runtimeDungeon.GenerateOnStart = false;
-                runtimeDungeon.Root = dungeonGenerator;
-                runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
-                UnityNavMeshAdapter dungeonNavMesh = dungeonGenerator.AddComponent<UnityNavMeshAdapter>();
-                dungeonNavMesh.BakeMode = UnityNavMeshAdapter.RuntimeNavMeshBakeMode.FullDungeonBake;
-                dungeonNavMesh.LayerMask = 35072; //256 + 2048 + 32768 = 35072
-                SceneManager.MoveGameObjectToScene(dungeonGenerator, scene);
-            }
-            else
-            {
-                if (runtimeDungeon.Generator.DungeonFlow == null)
-                {
-                    runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
-                }
-            }
-
-            runtimeDungeon.Generator.DungeonFlow.GlobalProps.First(p => p.ID == 1231).Count = new IntRange(RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite(), RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite());
-
-            GameObject OutOfBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
-            OutOfBounds.name = "OutOfBounds";
-            OutOfBounds.layer = 13;
-            OutOfBounds.transform.position = new Vector3(0, -300, 0);
-            OutOfBounds.transform.localScale = new Vector3(1000, 5, 1000);
-            BoxCollider boxCollider = OutOfBounds.GetComponent<BoxCollider>();
-            boxCollider.isTrigger = true;
-            OutOfBounds.AddComponent<OutOfBoundsTrigger>();
-            Rigidbody rigidbody = OutOfBounds.AddComponent<Rigidbody>();
-            rigidbody.useGravity = false;
-            rigidbody.isKinematic = true;
-            rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
-            SceneManager.MoveGameObjectToScene(OutOfBounds, scene);
-        }
-
         private void OnSceneUnloaded(Scene scene)
         {
             if (scene.name.Length > 0)
@@ -548,7 +463,7 @@ namespace LethalExpansion
             }
         }
 
-        private async Task waitForSession()
+        private async Task WaitForSession()
         {
             while (sessionWaiting)
             {
