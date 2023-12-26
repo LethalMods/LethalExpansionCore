@@ -31,47 +31,16 @@ using System.Collections;
 namespace LethalExpansion
 {
     [BepInPlugin(PluginGUID, PluginName, VersionString)]
+    // TODO: Figure out if these are still necessary
     [BepInDependency("me.swipez.melonloader.morecompany", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("BrutalCompanyPlus", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInDependency("MoonOfTheDay", BepInDependency.DependencyFlags.SoftDependency)]
-    [BepInDependency("beeisyou.LandmineFix", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalExpansion : BaseUnityPlugin
     {
         private const string PluginGUID = "LethalExpansion";
         private const string PluginName = "LethalExpansion";
         private const string VersionString = "1.3.5";
         public static readonly Version ModVersion = new Version(VersionString);
-
-        private readonly Version[] CompatibleModVersions = {
-            new Version(1, 3, 5)
-        };
-
-        private readonly Dictionary<string, Compatibility> CompatibleMods = new Dictionary<string, Compatibility>
-        {
-            { "com.sinai.unityexplorer", Compatibility.Medium },
-            { "HDLethalCompany", Compatibility.Good },
-            { "LC_API", Compatibility.Good },
-            { "me.swipez.melonloader.morecompany", Compatibility.Unknown },
-            { "BrutalCompanyPlus", Compatibility.Unknown },
-            { "MoonOfTheDay", Compatibility.Good },
-            { "Television_Controller", Compatibility.Bad },
-            { "beeisyou.LandmineFix", Compatibility.Perfect }
-        };
-
-        private enum Compatibility
-        {
-            Unknown = 0,
-            Perfect = 1,
-            Good = 2,
-            Medium = 3,
-            Bad = 4,
-            Critical = 5,
-            Incompatible = 6
-        }
-
-        List<BepInEx.PluginInfo> loadedPlugins = new List<BepInEx.PluginInfo>();
-
-        public static readonly int[] CompatibleGameVersions = {45};
 
         public static bool sessionWaiting = true;
         public static bool alreadypatched = false;
@@ -92,24 +61,6 @@ namespace LethalExpansion
         {
             Log = Logger;
             Logger.LogInfo($"PluginName: {PluginName}, VersionString: {VersionString} is loading...");
-
-
-            Logger.LogInfo("Getting other plugins list");
-            loadedPlugins = GetLoadedPlugins();
-            foreach (var plugin in loadedPlugins)
-            {
-                if (plugin.Metadata.GUID != PluginGUID)
-                {
-                    if (CompatibleMods.ContainsKey(plugin.Metadata.GUID))
-                    {
-                        Logger.LogInfo($"Plugin: {plugin.Metadata.Name} - Version: {plugin.Metadata.Version} - Compatibility: {CompatibleMods[plugin.Metadata.GUID]}");
-                    }
-                    else
-                    {
-                        Logger.LogInfo($"Plugin: {plugin.Metadata.Name} - Version: {plugin.Metadata.Version} - Compatibility: {Compatibility.Unknown}");
-                    }
-                }
-            }
 
             AssetBundlesManager.Instance.LoadAllAssetBundles();
 
@@ -141,11 +92,6 @@ namespace LethalExpansion
             }
 
             Logger.LogInfo($"PluginName: {PluginName}, VersionString: {VersionString} is loaded.");
-        }
-
-        List<BepInEx.PluginInfo> GetLoadedPlugins()
-        {
-            return Chainloader.PluginInfos.Values.ToList();
         }
 
         private int width = 256;

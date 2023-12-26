@@ -26,22 +26,6 @@ namespace LethalExpansion.Patches
         [HarmonyPrefix]
         static void Start_Prefix(GameNetworkManager __instance)
         {
-            if (!LethalExpansion.CompatibleGameVersions.Contains(__instance.gameVersionNum))
-            {
-                bool showWarning = true;
-                if (Chainloader.PluginInfos.ContainsKey("me.swipez.melonloader.morecompany") && __instance.gameVersionNum == 9999)
-                {
-                    showWarning = false;
-                }
-
-                if (showWarning)
-                {
-                    LethalExpansion.Log.LogWarning("Warning, this mod is not made for this Game Version, this could cause unexpected behaviors.");
-                    LethalExpansion.Log.LogWarning(string.Format("Game version: {0}", __instance.gameVersionNum));
-                    LethalExpansion.Log.LogWarning(string.Format("Compatible mod versions: {0}", string.Join(",", LethalExpansion.CompatibleGameVersions)));
-                }
-            }
-
             AssetBank mainBank = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<ModManifest>("Assets/Mods/LethalExpansion/modmanifest.asset").assetBank;
             if (mainBank != null)
             {
