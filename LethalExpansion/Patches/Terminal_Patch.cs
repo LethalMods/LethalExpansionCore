@@ -50,9 +50,12 @@ namespace LethalExpansion.Patches
                 StartOfRound.Instance.ChangePlanet();
             }
 
-            NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "hostweathers", string.Empty, 0);
+            // Because it uses a random based on the map seed the weather will always be synced as long as
+            // the conditions are the same (e.g StartOfRound.levels and SelectableLevel.randomWeathers)
+            StartOfRound.Instance.SetPlanetsWeather();
+
             LethalExpansion.Log.LogInfo("Terminal Main Patch.");
-            //AssetGather.Instance.GetList();
+            // AssetGather.Instance.GetList();
         }
 
         private static void GatherAssets()
@@ -360,36 +363,32 @@ namespace LethalExpansion.Patches
                         newLevel.overrideWeatherType = (LevelWeatherType)(int)newMoon.OverwriteWeatherType;
                         newLevel.currentWeather = LevelWeatherType.None;
 
-                        var tmpRandomWeatherTypes1 = newMoon.RandomWeatherTypes();
-                        List<RandomWeatherWithVariables> tmpRandomWeatherTypes2 = new List<RandomWeatherWithVariables>();
-                        foreach (var item in tmpRandomWeatherTypes1)
+                        List<RandomWeatherWithVariables> randomWeatherTypes = new List<RandomWeatherWithVariables>();
+                        foreach (RandomWeatherPair item in newMoon.RandomWeatherTypes())
                         {
-                            tmpRandomWeatherTypes2.Add(new RandomWeatherWithVariables() { weatherType = (LevelWeatherType)(int)item.Weather, weatherVariable = item.WeatherVariable1, weatherVariable2 = item.WeatherVariable2 });
+                            randomWeatherTypes.Add(new RandomWeatherWithVariables() { weatherType = (LevelWeatherType)(int)item.Weather, weatherVariable = item.WeatherVariable1, weatherVariable2 = item.WeatherVariable2 });
                         }
-                        newLevel.randomWeathers = tmpRandomWeatherTypes2.ToArray();
+                        newLevel.randomWeathers = randomWeatherTypes.ToArray();
 
-                        var tmpDungeonFlowTypes1 = newMoon.DungeonFlowTypes();
-                        List<IntWithRarity> tmpDungeonFlowTypes2 = new List<IntWithRarity>();
-                        foreach (var item in tmpDungeonFlowTypes1)
+                        List<IntWithRarity> dungeonFlowTypes = new List<IntWithRarity>();
+                        foreach (var item in newMoon.DungeonFlowTypes())
                         {
-                            tmpDungeonFlowTypes2.Add(new IntWithRarity() { id = item.ID, rarity = item.Rarity });
+                            dungeonFlowTypes.Add(new IntWithRarity() { id = item.ID, rarity = item.Rarity });
                         }
-                        newLevel.dungeonFlowTypes = tmpDungeonFlowTypes2.ToArray();
+                        newLevel.dungeonFlowTypes = dungeonFlowTypes.ToArray();
 
-                        var tmpSpawnableScrap1 = newMoon.SpawnableScrap();
-                        List<SpawnableItemWithRarity> tmpSpawnableScrap2 = new List<SpawnableItemWithRarity>();
-                        foreach (var item in tmpSpawnableScrap1)
+                        List<SpawnableItemWithRarity> spawnableScrap = new List<SpawnableItemWithRarity>();
+                        foreach (SpawnableScrapPair item in newMoon.SpawnableScrap())
                         {
-                            try
+                            if (!AssetGather.Instance.scraps.TryGetValue(item.ObjectName, out Item scrap))
                             {
-                                tmpSpawnableScrap2.Add(new SpawnableItemWithRarity() { spawnableItem = AssetGather.Instance.scraps[item.ObjectName], rarity = item.SpawnWeight });
+                                LethalExpansion.Log.LogWarning($"Scrap '{item.ObjectName}' on moon '{newMoon.MoonName}' could not be found, it has not been registered");
+                                continue;
                             }
-                            catch (Exception ex)
-                            {
-                                LethalExpansion.Log.LogError(ex.Message);
-                            }
+
+                            spawnableScrap.Add(new SpawnableItemWithRarity() { spawnableItem = scrap, rarity = item.SpawnWeight });
                         }
-                        newLevel.spawnableScrap = tmpSpawnableScrap2;
+                        newLevel.spawnableScrap = spawnableScrap;
 
                         newLevel.minScrap = newMoon.MinScrap;
                         newLevel.maxScrap = newMoon.MaxScrap;
@@ -405,51 +404,46 @@ namespace LethalExpansion.Patches
 
                         newLevel.maxEnemyPowerCount = newMoon.MaxEnemyPowerCount;
 
-                        var tmpEnemies1 = newMoon.Enemies();
-                        List<SpawnableEnemyWithRarity> tmpEnemies2 = new List<SpawnableEnemyWithRarity>();
-                        foreach (var item in tmpEnemies1)
+                        List<SpawnableEnemyWithRarity> enemies = new List<SpawnableEnemyWithRarity>();
+                        foreach (SpawnableEnemiesPair item in newMoon.Enemies())
                         {
-                            tmpEnemies2.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
+                            enemies.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
                         }
-                        newLevel.Enemies = tmpEnemies2;
+                        newLevel.Enemies = enemies;
 
                         newLevel.enemySpawnChanceThroughoutDay = newMoon.EnemySpawnChanceThroughoutDay;
                         newLevel.spawnProbabilityRange = newMoon.SpawnProbabilityRange;
 
-                        var tmpSpawnableMapObjects1 = newMoon.SpawnableMapObjects();
-                        List<SpawnableMapObject> tmpSpawnableMapObjects2 = new List<SpawnableMapObject>();
-                        foreach (var item in tmpSpawnableMapObjects1)
+                        List<SpawnableMapObject> spawnableMapObjects = new List<SpawnableMapObject>();
+                        foreach (SpawnableMapObjectPair item in newMoon.SpawnableMapObjects())
                         {
-                            tmpSpawnableMapObjects2.Add(new SpawnableMapObject() { prefabToSpawn = AssetGather.Instance.mapObjects[item.ObjectName], spawnFacingAwayFromWall = item.SpawnFacingAwayFromWall, numberToSpawn = item.SpawnRate });
+                            spawnableMapObjects.Add(new SpawnableMapObject() { prefabToSpawn = AssetGather.Instance.mapObjects[item.ObjectName], spawnFacingAwayFromWall = item.SpawnFacingAwayFromWall, numberToSpawn = item.SpawnRate });
                         }
-                        newLevel.spawnableMapObjects = tmpSpawnableMapObjects2.ToArray();
+                        newLevel.spawnableMapObjects = spawnableMapObjects.ToArray();
 
-                        var tmpSpawnableOutsideObjects1 = newMoon.SpawnableOutsideObjects();
-                        List<SpawnableOutsideObjectWithRarity> tmpSpawnableOutsideObjects2 = new List<SpawnableOutsideObjectWithRarity>();
-                        foreach (var item in tmpSpawnableOutsideObjects1)
+                        List<SpawnableOutsideObjectWithRarity> spawnableOutsideObjects = new List<SpawnableOutsideObjectWithRarity>();
+                        foreach (SpawnableOutsideObjectPair item in newMoon.SpawnableOutsideObjects())
                         {
-                            tmpSpawnableOutsideObjects2.Add(new SpawnableOutsideObjectWithRarity() { spawnableObject = AssetGather.Instance.outsideObjects[item.ObjectName], randomAmount = item.SpawnRate });
+                            spawnableOutsideObjects.Add(new SpawnableOutsideObjectWithRarity() { spawnableObject = AssetGather.Instance.outsideObjects[item.ObjectName], randomAmount = item.SpawnRate });
                         }
-                        newLevel.spawnableOutsideObjects = tmpSpawnableOutsideObjects2.ToArray();
+                        newLevel.spawnableOutsideObjects = spawnableOutsideObjects.ToArray();
 
                         newLevel.maxOutsideEnemyPowerCount = newMoon.MaxOutsideEnemyPowerCount;
                         newLevel.maxDaytimeEnemyPowerCount = newMoon.MaxDaytimeEnemyPowerCount;
 
-                        var tmpOutsideEnemies1 = newMoon.OutsideEnemies();
-                        List<SpawnableEnemyWithRarity> tmpOutsideEnemies2 = new List<SpawnableEnemyWithRarity>();
-                        foreach (var item in tmpOutsideEnemies1)
+                        List<SpawnableEnemyWithRarity> outsideEnemies = new List<SpawnableEnemyWithRarity>();
+                        foreach (var item in newMoon.OutsideEnemies())
                         {
-                            tmpOutsideEnemies2.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
+                            outsideEnemies.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
                         }
-                        newLevel.OutsideEnemies = tmpOutsideEnemies2;
+                        newLevel.OutsideEnemies = outsideEnemies;
 
-                        var tmpDaytimeEnemies1 = newMoon.DaytimeEnemies();
-                        List<SpawnableEnemyWithRarity> tmpDaytimeEnemies2 = new List<SpawnableEnemyWithRarity>();
-                        foreach (var item in tmpDaytimeEnemies1)
+                        List<SpawnableEnemyWithRarity> daytimeEnemies = new List<SpawnableEnemyWithRarity>();
+                        foreach (var item in newMoon.DaytimeEnemies())
                         {
-                            tmpDaytimeEnemies2.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
+                            daytimeEnemies.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
                         }
-                        newLevel.DaytimeEnemies = tmpDaytimeEnemies2;
+                        newLevel.DaytimeEnemies = daytimeEnemies;
 
                         newLevel.outsideEnemySpawnChanceThroughDay = newMoon.OutsideEnemySpawnChanceThroughDay;
                         newLevel.daytimeEnemySpawnChanceThroughDay = newMoon.DaytimeEnemySpawnChanceThroughDay;
@@ -611,6 +605,7 @@ namespace LethalExpansion.Patches
             {
                 LethalExpansion.Log.LogError(ex.Message);
             }
+
             return inputText;
         }
 

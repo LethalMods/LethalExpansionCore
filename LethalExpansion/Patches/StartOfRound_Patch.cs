@@ -12,8 +12,6 @@ namespace LethalExpansion.Patches
     [HarmonyPatch(typeof(StartOfRound))]
     internal class StartOfRound_Patch
     {
-        public static int[] currentWeathers = new int[0];
-
         [HarmonyPatch(nameof(StartOfRound.StartGame))]
         [HarmonyPostfix]
         public static void StartGame_Postfix(StartOfRound __instance)
@@ -22,6 +20,7 @@ namespace LethalExpansion.Patches
             {
                 SceneManager.LoadScene(__instance.currentLevel.name, LoadSceneMode.Additive);
             }
+
             LethalExpansion.Log.LogInfo("Game started.");
         }
 
@@ -52,63 +51,25 @@ namespace LethalExpansion.Patches
             }
         }
 
-        [HarmonyPatch(nameof(StartOfRound.SetPlanetsWeather))]
+        [HarmonyPatch(nameof(StartOfRound.ChangeLevel))]
         [HarmonyPrefix]
-        static bool SetPlanetsWeather_Prefix(StartOfRound __instance)
+        static void ChangeLevel_Prefix(StartOfRound __instance, ref int levelID)
         {
-            if(__instance.IsHost)
+            if (levelID < __instance.levels.Length)
             {
-                LethalExpansion.weathersReadyToShare = false;
-                return true;
+                return;
+            }
+
+            if (LethalExpansion.delayedLevelChange == -1)
+            {
+                LethalExpansion.delayedLevelChange = levelID;
+                levelID = 0;
             }
             else
             {
-                if (LethalExpansion.alreadypatched)
-                {
-                    NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "hostweathers", string.Empty, 0);
-                }
-                return false;
+                LethalExpansion.Log.LogError($"Error loading moon ID {levelID}.");
+                levelID = 0;
             }
-        }
-
-        [HarmonyPatch(nameof(StartOfRound.SetPlanetsWeather))]
-        [HarmonyPostfix]
-        static void SetPlanetsWeather_Postfix(StartOfRound __instance)
-        {
-            if (__instance.IsHost)
-            {
-                currentWeathers = new int[__instance.levels.Length];
-                string weathers = string.Empty;
-                for (int i = 0; i < __instance.levels.Length; i++)
-                {
-                    currentWeathers[i] = (int)__instance.levels[i].currentWeather;
-                    weathers += (int)__instance.levels[i].currentWeather + "&";
-                }
-                weathers = weathers.Remove(weathers.Length - 1);
-                NetworkPacketManager.Instance.SendPacket(PacketType.Data, "hostweathers", weathers, -1, false);
-                LethalExpansion.weathersReadyToShare = true;
-            }
-        }
-
-        [HarmonyPatch(nameof(StartOfRound.ChangeLevel))]
-        [HarmonyPrefix]
-        static bool ChangeLevel_Prefix(StartOfRound __instance, ref int levelID)
-        {
-            if (levelID >= __instance.levels.Length)
-            {
-                if (LethalExpansion.delayedLevelChange == -1)
-                {
-                    LethalExpansion.delayedLevelChange = levelID;
-                    levelID = 0;
-                }
-                else
-                {
-                    LethalExpansion.Log.LogError($"Error loading moon ID {levelID}.");
-                    levelID = 0;
-                }
-            }
-
-            return true;
         }
     }
 }

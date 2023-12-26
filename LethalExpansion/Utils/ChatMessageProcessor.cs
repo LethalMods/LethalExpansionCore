@@ -97,23 +97,6 @@ namespace LethalExpansion.Utils
             NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "clientinfo", string.Empty, (long)sender);
         }
 
-        private static void ProcessHostWeathersRequest(ulong sender, string header, string packet)
-        {
-            if (!LethalExpansion.ishost || sender == 0 || !LethalExpansion.weathersReadyToShare)
-            {
-                return;
-            }
-
-            string weathers = string.Empty;
-            foreach (var weather in StartOfRound_Patch.currentWeathers)
-            {
-                weathers += weather + "&";
-            }
-            weathers = weathers.Remove(weathers.Length - 1);
-
-            NetworkPacketManager.Instance.SendPacket(PacketType.Data, "hostweathers", weathers, (long)sender, false);
-        }
-
         private static void ProcessRequest(ulong sender, string header, string packet)
         {
             try
@@ -127,10 +110,6 @@ namespace LethalExpansion.Utils
                     // host receive config request from client
                     case "hostconfig":
                         ProcessHostConfigRequest(sender, header, packet);
-                        break;
-                    // host receive weather request from client
-                    case "hostweathers":
-                        ProcessHostWeathersRequest(sender, header, packet);
                         break;
                     default:
                         LethalExpansion.Log.LogInfo("Unrecognized command.");
@@ -207,29 +186,6 @@ namespace LethalExpansion.Utils
             LethalExpansion.hostDataWaiting = false;
         }
 
-        private static void ProcessHostWeathers(ulong sender, string header, string packet)
-        {
-            if (LethalExpansion.ishost || sender != 0)
-            {
-                return;
-            }
-
-            string[] values = packet.Split('&');
-
-            LethalExpansion.Log.LogInfo("Received host weathers: " + packet);
-
-            StartOfRound_Patch.currentWeathers = new int[values.Length];
-            for (int i = 0; i < values.Length; i++)
-            {
-                int tmp = 0;
-                if (int.TryParse(values[i], out tmp))
-                {
-                    StartOfRound_Patch.currentWeathers[i] = tmp;
-                    StartOfRound.Instance.levels[i].currentWeather = (LevelWeatherType)tmp;
-                }
-            }
-        }
-
         private static void ProcessKickReason(ulong sender, string header, string packet)
         {
             if (LethalExpansion.ishost || sender != 0)
@@ -253,10 +209,6 @@ namespace LethalExpansion.Utils
                     // client receive config from host
                     case "hostconfig":
                         ProcessHostConfig(sender, header, packet);
-                        break;
-                    // client receive weathers from host
-                    case "hostweathers":
-                        ProcessHostWeathers(sender, header, packet);
                         break;
                     case "kickreason":
                         ProcessKickReason(sender, header, packet);

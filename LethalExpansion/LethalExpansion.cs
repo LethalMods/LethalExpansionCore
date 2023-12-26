@@ -77,7 +77,6 @@ namespace LethalExpansion
         public static bool hostDataWaiting = true;
         public static bool ishost = false;
         public static bool alreadypatched = false;
-        public static bool weathersReadyToShare = false;
         public static bool isInGame = false;
 
         public static int delayedLevelChange = -1;
