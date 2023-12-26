@@ -93,14 +93,6 @@ namespace LethalExpansion.Patches
                         }
                     }
 
-                    /*foreach (var newMoon in manifest.moons)
-                    {
-                        if (newMoon != null && newMoon.MainPrefab != null)
-                        {
-                            Whitelist.CheckAndRemoveIllegalComponents(newMoon.MainPrefab.transform, Whitelist.MoonPrefabComponentWhitelistUnused);
-                        }
-                    }*/
-
                     if (manifest.assetBank != null && manifest.assetBank.NetworkPrefabs() != null && manifest.assetBank.NetworkPrefabs().Length > 0)
                     {
                         foreach (var networkprefab in manifest.assetBank.NetworkPrefabs())
@@ -108,7 +100,7 @@ namespace LethalExpansion.Patches
                             if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
                             {
                                 GameObject prefab = bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath);
-                                Whitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, Whitelist.ScrapPrefabComponentWhitelist);
+                                ComponentWhitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
                                 __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
                                 LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
                             }
@@ -120,12 +112,6 @@ namespace LethalExpansion.Patches
             {
                 LethalExpansion.Log.LogError(ex.Message);
             }
-
-            /*LethalExpansion.Log.LogInfo("1");
-            var objtest = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>("Assets/Mods/LethalExpansion/Prefabs/itemshipanimcontainer.prefab");
-            GameObject.DontDestroyOnLoad(objtest);
-            __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(objtest);
-            LethalExpansion.Log.LogInfo("2");*/
         }
 
         private static bool IsScrapCompatible(Scrap newScrap)
@@ -159,7 +145,7 @@ namespace LethalExpansion.Patches
             scrapItem.maxValue = newScrap.maxValue;
             scrapItem.weight = (float)newScrap.weight / 100 + 1;
 
-            Whitelist.CheckAndRemoveIllegalComponents(newScrap.prefab.transform, Whitelist.ScrapPrefabComponentWhitelist);
+            ComponentWhitelist.CheckAndRemoveIllegalComponents(newScrap.prefab.transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
             scrapItem.spawnPrefab = newScrap.prefab;
 
             scrapItem.twoHanded = newScrap.twoHanded;

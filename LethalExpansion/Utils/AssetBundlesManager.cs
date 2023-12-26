@@ -131,8 +131,8 @@ namespace LethalExpansion.Utils
                 return;
             }
 
-            LethalExpansion.Log.LogInfo($"Module found: {modManifest.modName} v{(modManifest.GetVersion() != null ? modManifest.GetVersion().ToString() : "0.0.0.0" )} Loaded in {stopwatch.ElapsedMilliseconds}ms");
-            if(modManifest.GetVersion() == null || modManifest.GetVersion().ToString() == "0.0.0.0")
+            LethalExpansion.Log.LogInfo($"Module found: {modManifest.modName} v{(modManifest.GetVersion() != null ? modManifest.GetVersion().ToString() : "0.0.0.0")} Loaded in {stopwatch.ElapsedMilliseconds}ms");
+            if (modManifest.GetVersion() == null || modManifest.GetVersion().ToString() == "0.0.0.0")
             {
                 LethalExpansion.Log.LogWarning($"Module {modManifest.modName} have no version number, this is unsafe!");
             }
@@ -169,7 +169,7 @@ namespace LethalExpansion.Utils
 
         public bool BundlesLoaded(string[] bundleNames)
         {
-            foreach(string bundleName in bundleNames)
+            foreach (string bundleName in bundleNames)
             {
                 if (!assetBundles.ContainsKey(bundleName.ToLower()))
                 {
@@ -182,7 +182,7 @@ namespace LethalExpansion.Utils
 
         public bool IncompatibleBundlesLoaded(string[] bundleNames)
         {
-            foreach(string bundleName in bundleNames)
+            foreach (string bundleName in bundleNames)
             {
                 if (assetBundles.ContainsKey(bundleName.ToLower()))
                 {

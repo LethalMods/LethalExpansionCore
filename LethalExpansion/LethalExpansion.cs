@@ -187,11 +187,6 @@ namespace LethalExpansion
             }
             else if (scene.name == "CompanyBuilding")
             {
-                /*
-                GameObject Labyrinth = Instantiate(AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>("Assets/Mods/LethalExpansion/Prefabs/labyrinth.prefab"));
-                SceneManager.MoveGameObjectToScene(Labyrinth, scene);
-                */
-
                 SpaceLight.SetActive(false);
                 terrainfixer.SetActive(false);
             }
@@ -391,7 +386,7 @@ namespace LethalExpansion
                 return;
             }
 
-            Whitelist.CheckAndRemoveIllegalComponents(moonPrefab.transform, Whitelist.MoonPrefabComponentWhitelist);
+            ComponentWhitelist.CheckAndRemoveIllegalComponents(moonPrefab.transform, ComponentWhitelist.MoonPrefabComponentWhitelist);
             GameObject mainPrefab = GameObject.Instantiate(moonPrefab);
             if (mainPrefab == null)
             {

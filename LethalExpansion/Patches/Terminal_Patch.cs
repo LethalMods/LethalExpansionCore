@@ -35,7 +35,6 @@ namespace LethalExpansion.Patches
             moonsPatched = false;
             routeKeyword = __instance.terminalNodes.allKeywords.First(k => k.word == "route");
 
-            // RemoveMoon(__instance, "Experimentation");
             Hotfix_DoubleRoutes();
             GatherAssets();
             AddScraps(__instance);
@@ -55,7 +54,6 @@ namespace LethalExpansion.Patches
             StartOfRound.Instance.SetPlanetsWeather();
 
             LethalExpansion.Log.LogInfo("Terminal Main Patch.");
-            // AssetGather.Instance.GetList();
         }
 
         private static void GatherAssets()
@@ -127,7 +125,7 @@ namespace LethalExpansion.Patches
                 }
             }
 
-            //Interfacing LE and SDK Asset Gathers
+            // Interfacing LE and SDK Asset Gathers
             AssetGatherDialog.audioClips = AssetGather.Instance.audioClips;
             AssetGatherDialog.audioMixers = AssetGather.Instance.audioMixers;
             AssetGatherDialog.sprites = AssetGather.Instance.sprites;
