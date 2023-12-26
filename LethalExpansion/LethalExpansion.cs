@@ -120,8 +120,6 @@ namespace LethalExpansion
 
             config = Config;
 
-            ConfigManager.Instance.AddItem(new ConfigItem("LoadModules", true, "Modules", "Load SDK Modules that add new content to the game. Disable it to play with Vanilla players. (RESTART REQUIRED)", sync:false, optional: false, requireRestart:true));
-
             ConfigManager.Instance.ReadConfig();
 
             Config.SettingChanged += ConfigSettingChanged;

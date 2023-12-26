@@ -134,7 +134,7 @@ namespace LethalExpansion.Patches
 
         public static void AddScraps(Terminal __instance)
         {
-            if (!ConfigManager.Instance.FindItemValue<bool>("LoadModules") || scrapsPatched)
+            if (scrapsPatched)
             {
                 return;
             }
@@ -252,7 +252,7 @@ namespace LethalExpansion.Patches
         {
             newMoons = new Dictionary<int, Moon>();
 
-            if (!ConfigManager.Instance.FindItemValue<bool>("LoadModules") || moonsPatched)
+            if (moonsPatched)
             {
                 return;
             }

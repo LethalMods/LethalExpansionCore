@@ -56,72 +56,69 @@ namespace LethalExpansion.Patches
                 }
             }
 
-            if (ConfigManager.Instance.FindItemValue<bool>("LoadModules"))
+            Sprite scrapSprite = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<Sprite>("Assets/Mods/LethalExpansion/Sprites/ScrapItemIcon2.png");
+            try
             {
-                Sprite scrapSprite = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<Sprite>("Assets/Mods/LethalExpansion/Sprites/ScrapItemIcon2.png");
-                try
+                foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
                 {
-                    foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
+                    (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
+
+                    if (bundle == null || manifest == null)
                     {
-                        (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
+                        continue;
+                    }
 
-                        if (bundle == null || manifest == null)
+                    if (manifest.scraps == null || manifest.scraps.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    foreach (var newScrap in manifest.scraps)
+                    {
+                        if (!IsScrapCompatible(newScrap))
                         {
                             continue;
                         }
 
-                        if (manifest.scraps == null || manifest.scraps.Length == 0)
+                        InitializeScrap(newScrap, scrapSprite);
+
+                        try
                         {
-                            continue;
+                            __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(newScrap.prefab);
+                            LethalExpansion.Log.LogInfo(newScrap.itemName + " Scrap registered.");
                         }
-
-                        foreach (var newScrap in manifest.scraps)
+                        catch (Exception ex)
                         {
-                            if (!IsScrapCompatible(newScrap))
-                            {
-                                continue;
-                            }
-
-                            InitializeScrap(newScrap, scrapSprite);
-
-                            try
-                            {
-                                __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(newScrap.prefab);
-                                LethalExpansion.Log.LogInfo(newScrap.itemName + " Scrap registered.");
-                            }
-                            catch (Exception ex)
-                            {
-                                LethalExpansion.Log.LogError(ex.Message);
-                            }
+                            LethalExpansion.Log.LogError(ex.Message);
                         }
+                    }
 
-                        /*foreach (var newMoon in manifest.moons)
+                    /*foreach (var newMoon in manifest.moons)
+                    {
+                        if (newMoon != null && newMoon.MainPrefab != null)
                         {
-                            if (newMoon != null && newMoon.MainPrefab != null)
-                            {
-                                Whitelist.CheckAndRemoveIllegalComponents(newMoon.MainPrefab.transform, Whitelist.MoonPrefabComponentWhitelistUnused);
-                            }
-                        }*/
+                            Whitelist.CheckAndRemoveIllegalComponents(newMoon.MainPrefab.transform, Whitelist.MoonPrefabComponentWhitelistUnused);
+                        }
+                    }*/
 
-                        if (manifest.assetBank != null && manifest.assetBank.NetworkPrefabs() != null && manifest.assetBank.NetworkPrefabs().Length > 0)
+                    if (manifest.assetBank != null && manifest.assetBank.NetworkPrefabs() != null && manifest.assetBank.NetworkPrefabs().Length > 0)
+                    {
+                        foreach (var networkprefab in manifest.assetBank.NetworkPrefabs())
                         {
-                            foreach (var networkprefab in manifest.assetBank.NetworkPrefabs())
+                            if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
                             {
-                                if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
-                                {
-                                    GameObject prefab = bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath);
-                                    Whitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, Whitelist.ScrapPrefabComponentWhitelist);
-                                    __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
-                                    LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
-                                }
+                                GameObject prefab = bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath);
+                                Whitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, Whitelist.ScrapPrefabComponentWhitelist);
+                                __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
+                                LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
                             }
                         }
                     }
                 }
-                catch (Exception ex)
-                {
-                    LethalExpansion.Log.LogError(ex.Message);
-                }
+            }
+            catch (Exception ex)
+            {
+                LethalExpansion.Log.LogError(ex.Message);
             }
 
             /*LethalExpansion.Log.LogInfo("1");

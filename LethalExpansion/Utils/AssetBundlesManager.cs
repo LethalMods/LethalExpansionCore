@@ -113,31 +113,31 @@ namespace LethalExpansion.Utils
             string manifestPath = $"Assets/Mods/{Path.GetFileNameWithoutExtension(file)}/ModManifest.asset";
 
             ModManifest modManifest = loadedBundle.LoadAsset<ModManifest>(manifestPath);
-            if (modManifest != null)
-            {
-                if(!assetBundles.Any(b => b.Value.Item2.modName == modManifest.modName))
-                {
-                    LethalExpansion.Log.LogInfo($"Module found: {modManifest.modName} v{(modManifest.GetVersion() != null ? modManifest.GetVersion().ToString() : "0.0.0.0" )} Loaded in {stopwatch.ElapsedMilliseconds}ms");
-                    if(modManifest.GetVersion() == null || modManifest.GetVersion().ToString() == "0.0.0.0")
-                    {
-                        LethalExpansion.Log.LogWarning($"Module {modManifest.modName} have no version number, this is unsafe!");
-                    }
-
-                    assetBundles.Add(Path.GetFileNameWithoutExtension(file).ToLower(), (loadedBundle, modManifest));
-                }
-                else
-                {
-                    LethalExpansion.Log.LogWarning($"Another mod with same name is already loaded: {modManifest.modName}");
-                    loadedBundle.Unload(true);
-                    LethalExpansion.Log.LogInfo($"AssetBundle unloaded: {Path.GetFileName(file)}");
-                }
-            }
-            else
+            if (modManifest == null)
             {
                 LethalExpansion.Log.LogWarning($"AssetBundle have no ModManifest: {Path.GetFileName(file)}");
                 loadedBundle.Unload(true);
                 LethalExpansion.Log.LogInfo($"AssetBundle unloaded: {Path.GetFileName(file)}");
+
+                return;
             }
+
+            if (assetBundles.Any(b => b.Value.Item2.modName == modManifest.modName))
+            {
+                LethalExpansion.Log.LogWarning($"Another mod with same name is already loaded: {modManifest.modName}");
+                loadedBundle.Unload(true);
+                LethalExpansion.Log.LogInfo($"AssetBundle unloaded: {Path.GetFileName(file)}");
+
+                return;
+            }
+
+            LethalExpansion.Log.LogInfo($"Module found: {modManifest.modName} v{(modManifest.GetVersion() != null ? modManifest.GetVersion().ToString() : "0.0.0.0" )} Loaded in {stopwatch.ElapsedMilliseconds}ms");
+            if(modManifest.GetVersion() == null || modManifest.GetVersion().ToString() == "0.0.0.0")
+            {
+                LethalExpansion.Log.LogWarning($"Module {modManifest.modName} have no version number, this is unsafe!");
+            }
+
+            assetBundles.Add(Path.GetFileNameWithoutExtension(file).ToLower(), (loadedBundle, modManifest));
         }
 
         public bool BundleLoaded(string bundleName)
