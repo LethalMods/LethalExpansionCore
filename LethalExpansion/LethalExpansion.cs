@@ -87,8 +87,6 @@ namespace LethalExpansion
         private static readonly Harmony Harmony = new Harmony(PluginGUID);
         public static ManualLogSource Log = new ManualLogSource(PluginName);
 
-        public static ConfigFile config;
-
         public static NetworkManager networkManager;
 
         public GameObject SpaceLight;
@@ -117,12 +115,6 @@ namespace LethalExpansion
                     }
                 }
             }
-
-            config = Config;
-
-            ConfigManager.Instance.ReadConfig();
-
-            Config.SettingChanged += ConfigSettingChanged;
 
             AssetBundlesManager.Instance.LoadAllAssetBundles();
 
@@ -476,34 +468,12 @@ namespace LethalExpansion
                     await Task.Delay(3000);
                 }
             }
-            else
-            {
-                for (int i = 0; i < ConfigManager.Instance.GetAll().Count; i++)
-                {
-                    if (ConfigManager.Instance.MustBeSync(i))
-                    {
-                        ConfigManager.Instance.SetItemValue(i, ConfigManager.Instance.FindEntryValue(i));
-                    }
-                }
-            }
 
             if (!alreadypatched)
             {
                 Terminal_Patch.MainPatch(GameObject.Find("TerminalScript").GetComponent<Terminal>());
                 alreadypatched = true;
             }
-        }
-
-        private void ConfigSettingChanged(object sender, EventArgs e)
-        {
-            SettingChangedEventArgs settingChangedEventArgs = e as SettingChangedEventArgs;
-
-            if (settingChangedEventArgs == null)
-            {
-                return;
-            }
-
-            Log.LogInfo(string.Format("{0} Changed to {1}", settingChangedEventArgs.ChangedSetting.Definition.Key, settingChangedEventArgs.ChangedSetting.BoxedValue));
         }
     }
 }

@@ -27,6 +27,8 @@ namespace LethalExpansion.Utils
 
         public void SendPacket(PacketType type, string header, string packet, long destination = -1, bool waitForAnswer = true)
         {
+            LethalExpansion.Log.LogInfo($"[{type}] Sending: [sync]{(int)type}|{RoundManager.Instance.NetworkManager.LocalClientId}>{destination}|{header}={packet}[sync]");
+
             HUDManager.Instance.AddTextToChatOnServer($"[sync]{(int)type}|{RoundManager.Instance.NetworkManager.LocalClientId}>{destination}|{header}={packet}[sync]");
             if (waitForAnswer && RoundManager.Instance.NetworkManager.IsHost)
             {
@@ -42,6 +44,8 @@ namespace LethalExpansion.Utils
                 {
                     continue;
                 }
+
+                LethalExpansion.Log.LogInfo($"[{type}] Sending: [sync]{(int)type}|{RoundManager.Instance.NetworkManager.LocalClientId}>{destination}|{header}={packet}[sync]");
 
                 HUDManager.Instance.AddTextToChatOnServer($"[sync]{(int)type}|{RoundManager.Instance.NetworkManager.LocalClientId}>{destination}|{header}={packet}[sync]");
                 if (waitForAnswer && RoundManager.Instance.NetworkManager.IsHost)

@@ -44,7 +44,7 @@ namespace LethalExpansion.Utils
                     NetworkPacketManager.Instance.CancelTimeout((long)sender);
                 }
 
-                LethalExpansion.Log.LogInfo(message);
+                LethalExpansion.Log.LogInfo($"[{type}] Recieved: {message}");
                 switch (type)
                 {
                     case PacketType.Request:
@@ -120,13 +120,16 @@ namespace LethalExpansion.Utils
             {
                 switch (header)
                 {
-                    case "clientinfo": //client receive info request from host
+                    // client receive info request from host
+                    case "clientinfo":
                         ProcessClientInfoRequest(sender, header, packet);
                         break;
-                    case "hostconfig": //host receive config request from client
+                    // host receive config request from client
+                    case "hostconfig":
                         ProcessHostConfigRequest(sender, header, packet);
                         break;
-                    case "hostweathers": //host receive weather request from client
+                    // host receive weather request from client
+                    case "hostweathers":
                         ProcessHostWeathersRequest(sender, header, packet);
                         break;
                     default:
@@ -191,30 +194,7 @@ namespace LethalExpansion.Utils
                 return;
             }
 
-            string config = string.Empty;
-            foreach (var item in ConfigManager.Instance.GetAll())
-            {
-                switch (item.type.Name)
-                {
-                    case "Int32":
-                        config += "i" + ((int)item.Value).ToString(CultureInfo.InvariantCulture);
-                        break;
-                    case "Single":
-                        config += "f" + ((float)item.Value).ToString(CultureInfo.InvariantCulture);
-                        break;
-                    case "Boolean":
-                        config += "b" + ((bool)item.Value);
-                        break;
-                    case "String":
-                        config += "s" + item;
-                        break;
-                    default:
-                        break;
-                }
-                config += "&";
-            }
-            config = config.Remove(config.Length - 1);
-            NetworkPacketManager.Instance.SendPacket(PacketType.Data, "hostconfig", config, (long)sender);
+            NetworkPacketManager.Instance.SendPacket(PacketType.Data, "hostconfig", String.Empty, (long)sender);
         }
 
         private static void ProcessHostConfig(ulong sender, string header, string packet)
@@ -224,23 +204,7 @@ namespace LethalExpansion.Utils
                 return;
             }
 
-            string[] values = packet.Split('&');
-
-            LethalExpansion.Log.LogInfo("Received host config: " + packet);
-
-            for (int i = 0; i < values.Length; i++)
-            {
-                if (i < ConfigManager.Instance.GetCount())
-                {
-                    if (ConfigManager.Instance.MustBeSync(i))
-                    {
-                        ConfigManager.Instance.SetItemValue(i, values[i].Substring(1), values[i][0]);
-                    }
-                }
-            }
-
             LethalExpansion.hostDataWaiting = false;
-            LethalExpansion.Log.LogInfo("Updated config");
         }
 
         private static void ProcessHostWeathers(ulong sender, string header, string packet)
@@ -282,13 +246,16 @@ namespace LethalExpansion.Utils
             {
                 switch (header)
                 {
-                    case "clientinfo": //host receive info from client
+                    // host receive info from client
+                    case "clientinfo":
                         ProcessClientInfo(sender, header, packet);
                         break;
-                    case "hostconfig": //client receive config from host
+                    // client receive config from host
+                    case "hostconfig":
                         ProcessHostConfig(sender, header, packet);
                         break;
-                    case "hostweathers": //client receive weathers from host
+                    // client receive weathers from host
+                    case "hostweathers":
                         ProcessHostWeathers(sender, header, packet);
                         break;
                     case "kickreason":
