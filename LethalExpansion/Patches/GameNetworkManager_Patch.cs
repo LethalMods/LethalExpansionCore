@@ -33,6 +33,7 @@ namespace LethalExpansion.Patches
                 {
                     showWarning = false;
                 }
+
                 if (showWarning)
                 {
                     LethalExpansion.Log.LogWarning("Warning, this mod is not made for this Game Version, this could cause unexpected behaviors.");
@@ -76,71 +77,12 @@ namespace LethalExpansion.Patches
 
                         foreach (var newScrap in manifest.scraps)
                         {
-                            if (newScrap == null || newScrap.prefab == null)
+                            if (!IsScrapCompatible(newScrap))
                             {
                                 continue;
                             }
 
-                            if (newScrap.RequiredBundles != null && !AssetBundlesManager.Instance.BundlesLoaded(newScrap.RequiredBundles))
-                            {
-                                continue;
-                            }
-
-                            if (newScrap.IncompatibleBundles != null && AssetBundlesManager.Instance.IncompatibleBundlesLoaded(newScrap.IncompatibleBundles))
-                            {
-                                continue;
-                            }
-
-                            Item scrapItem = ScriptableObject.CreateInstance<Item>();
-                            scrapItem.name = newScrap.name;
-                            scrapItem.itemName = newScrap.itemName;
-                            scrapItem.canBeGrabbedBeforeGameStart = true;
-                            scrapItem.isScrap = true;
-                            scrapItem.minValue = newScrap.minValue;
-                            scrapItem.maxValue = newScrap.maxValue;
-                            scrapItem.weight = (float)newScrap.weight / 100 + 1;
-
-                            CheckAndRemoveIllegalComponents(newScrap.prefab.transform, scrapPrefabComponentWhitelist);
-                            scrapItem.spawnPrefab = newScrap.prefab;
-
-                            scrapItem.twoHanded = newScrap.twoHanded;
-                            scrapItem.twoHandedAnimation = newScrap.twoHandedAnimation;
-                            scrapItem.requiresBattery = newScrap.requiresBattery;
-                            scrapItem.isConductiveMetal = newScrap.isConductiveMetal;
-
-                            scrapItem.itemIcon = scrapSprite;
-                            scrapItem.syncGrabFunction = false;
-                            scrapItem.syncUseFunction = false;
-                            scrapItem.syncDiscardFunction = false;
-                            scrapItem.syncInteractLRFunction = false;
-                            scrapItem.verticalOffset = newScrap.verticalOffset;
-                            scrapItem.restingRotation = newScrap.restingRotation;
-                            scrapItem.positionOffset = newScrap.positionOffset;
-                            scrapItem.rotationOffset = newScrap.rotationOffset;
-                            scrapItem.meshOffset = false;
-                            scrapItem.meshVariants = newScrap.meshVariants;
-                            scrapItem.materialVariants = newScrap.materialVariants;
-                            scrapItem.canBeInspected = false;
-
-                            PhysicsProp physicsProp = newScrap.prefab.AddComponent<PhysicsProp>();
-                            physicsProp.grabbable = true;
-                            physicsProp.itemProperties = scrapItem;
-                            physicsProp.mainObjectRenderer = newScrap.prefab.GetComponent<MeshRenderer>();
-
-                            AudioSource audioSource = newScrap.prefab.AddComponent<AudioSource>();
-                            audioSource.playOnAwake = false;
-                            audioSource.spatialBlend = 1f;
-
-                            Transform scanNodeObject = newScrap.prefab.transform.Find("ScanNode");
-                            if (scanNodeObject != null)
-                            {
-                                ScanNodeProperties scanNode = scanNodeObject.gameObject.AddComponent<ScanNodeProperties>();
-                                scanNode.maxRange = 13;
-                                scanNode.minRange = 1;
-                                scanNode.headerText = newScrap.itemName;
-                                scanNode.subText = "Value: ";
-                                scanNode.nodeType = 2;
-                            }
+                            InitializeScrap(newScrap, scrapSprite);
 
                             try
                             {
@@ -153,11 +95,11 @@ namespace LethalExpansion.Patches
                             }
                         }
 
-                        /*foreach (var newMoon in bundle2.Item2.moons)
+                        /*foreach (var newMoon in manifest.moons)
                         {
                             if (newMoon != null && newMoon.MainPrefab != null)
                             {
-                                CheckAndRemoveIllegalComponents(newMoon.MainPrefab.transform, moonPrefabComponentWhitelist);
+                                Whitelist.CheckAndRemoveIllegalComponents(newMoon.MainPrefab.transform, Whitelist.MoonPrefabComponentWhitelistUnused);
                             }
                         }*/
 
@@ -168,7 +110,7 @@ namespace LethalExpansion.Patches
                                 if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
                                 {
                                     GameObject prefab = bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath);
-                                    CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, scrapPrefabComponentWhitelist);
+                                    Whitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, Whitelist.ScrapPrefabComponentWhitelist);
                                     __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
                                     LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
                                 }
@@ -189,191 +131,77 @@ namespace LethalExpansion.Patches
             LethalExpansion.Log.LogInfo("2");*/
         }
 
-        private static List<Type> scrapPrefabComponentWhitelist = new List<Type> {
-            //Base
-            typeof(Transform),
-            //Mesh
-            typeof(MeshFilter),
-            typeof(MeshRenderer),
-            typeof(SkinnedMeshRenderer),
-            //Physics
-            typeof(MeshCollider),
-            typeof(BoxCollider),
-            typeof(SphereCollider),
-            typeof(CapsuleCollider),
-            typeof(SphereCollider),
-            typeof(TerrainCollider),
-            typeof(WheelCollider),
-            typeof(ArticulationBody),
-            typeof(ConstantForce),
-            typeof(ConfigurableJoint),
-            typeof(FixedJoint),
-            typeof(HingeJoint),
-            typeof(Cloth),
-            typeof(Rigidbody),
-            //Netcode
-            typeof(NetworkObject),
-            typeof(NetworkRigidbody),
-            typeof(NetworkTransform),
-            typeof(NetworkAnimator),
-            //Animation
-            typeof(Animator),
-            typeof(Animation),
-            //Rendering
-            typeof(DecalProjector),
-            typeof(LODGroup),
-            typeof(Light),
-            typeof(HDAdditionalLightData),
-            typeof(LightProbeGroup),
-            typeof(LightProbeProxyVolume),
-            typeof(LocalVolumetricFog),
-            typeof(OcclusionArea),
-            typeof(OcclusionPortal),
-            typeof(ReflectionProbe),
-            typeof(PlanarReflectionProbe),
-            typeof(HDAdditionalReflectionData),
-            typeof(SortingGroup),
-            typeof(SpriteRenderer),
-            //Audio
-            typeof(AudioSource),
-            typeof(AudioReverbZone),
-            typeof(AudioReverbFilter),
-            typeof(AudioChorusFilter),
-            typeof(AudioDistortionFilter),
-            typeof(AudioEchoFilter),
-            typeof(AudioHighPassFilter),
-            typeof(AudioLowPassFilter),
-            typeof(AudioListener),
-            //Effect
-            typeof(LensFlare),
-            typeof(TrailRenderer),
-            typeof(LineRenderer),
-            typeof(ParticleSystem),
-            typeof(ParticleSystemRenderer),
-            typeof(ParticleSystemForceField),
-            //Video
-            typeof(VideoPlayer)
-        };
-
-        private static List<Type> moonPrefabComponentWhitelist = new List<Type> {
-            //Base
-            typeof(Transform),
-            //Mesh
-            typeof(MeshFilter),
-            typeof(MeshRenderer),
-            typeof(SkinnedMeshRenderer),
-            //Physics
-            typeof(MeshCollider),
-            typeof(BoxCollider),
-            typeof(SphereCollider),
-            typeof(CapsuleCollider),
-            typeof(SphereCollider),
-            typeof(TerrainCollider),
-            typeof(WheelCollider),
-            typeof(ArticulationBody),
-            typeof(ConstantForce),
-            typeof(ConfigurableJoint),
-            typeof(FixedJoint),
-            typeof(HingeJoint),
-            typeof(Cloth),
-            typeof(Rigidbody),
-            //Netcode
-            typeof(NetworkObject),
-            typeof(NetworkRigidbody),
-            typeof(NetworkTransform),
-            typeof(NetworkAnimator),
-            //Animation
-            typeof(Animator),
-            typeof(Animation),
-            //Terrain
-            typeof(Terrain),
-            typeof(Tree),
-            typeof(WindZone),
-            //Rendering
-            typeof(DecalProjector),
-            typeof(LODGroup),
-            typeof(Light),
-            typeof(HDAdditionalLightData),
-            typeof(LightProbeGroup),
-            typeof(LightProbeProxyVolume),
-            typeof(LocalVolumetricFog),
-            typeof(OcclusionArea),
-            typeof(OcclusionPortal),
-            typeof(ReflectionProbe),
-            typeof(PlanarReflectionProbe),
-            typeof(HDAdditionalReflectionData),
-            typeof(Skybox),
-            typeof(SortingGroup),
-            typeof(SpriteRenderer),
-            typeof(Volume),
-            //Audio
-            typeof(AudioSource),
-            typeof(AudioReverbZone),
-            typeof(AudioReverbFilter),
-            typeof(AudioChorusFilter),
-            typeof(AudioDistortionFilter),
-            typeof(AudioEchoFilter),
-            typeof(AudioHighPassFilter),
-            typeof(AudioLowPassFilter),
-            typeof(AudioListener),
-            //Effect
-            typeof(LensFlare),
-            typeof(TrailRenderer),
-            typeof(LineRenderer),
-            typeof(ParticleSystem),
-            typeof(ParticleSystemRenderer),
-            typeof(ParticleSystemForceField),
-            typeof(Projector),
-            //Video
-            typeof(VideoPlayer),
-            //Navigation
-            typeof(NavMeshSurface),
-            typeof(NavMeshModifier),
-            typeof(NavMeshModifierVolume),
-            typeof(NavMeshLink),
-            typeof(NavMeshObstacle),
-            typeof(OffMeshLink),
-            //LethalSDK
-            typeof(SI_AudioReverbPresets),
-            typeof(SI_AudioReverbTrigger),
-            typeof(SI_DungeonGenerator),
-            typeof(SI_MatchLocalPlayerPosition),
-            typeof(SI_AnimatedSun),
-            typeof(SI_EntranceTeleport),
-            typeof(SI_ScanNode),
-            typeof(SI_DoorLock),
-            typeof(SI_WaterSurface),
-            typeof(SI_Ladder),
-            typeof(SI_ItemDropship),
-            typeof(SI_InteractTrigger),
-            typeof(SI_DamagePlayer),
-            typeof(SI_SoundYDistance),
-            typeof(SI_AudioOutputInterface),
-            typeof(PlayerShip)
-        };
-
-        static void CheckAndRemoveIllegalComponents(Transform prefab, List<Type> whitelist)
+        private static bool IsScrapCompatible(Scrap newScrap)
         {
-            try
+            if (newScrap == null || newScrap.prefab == null)
             {
-                var components = prefab.GetComponents<Component>();
-                foreach (var component in components)
-                {
-                    if (!whitelist.Any(whitelistType => component.GetType() == whitelistType))
-                    {
-                        LethalExpansion.Log.LogWarning($"Removed illegal {component.GetType().Name} component.");
-                        GameObject.Destroy(component);
-                    }
-                }
-
-                foreach (Transform child in prefab)
-                {
-                    CheckAndRemoveIllegalComponents(child, whitelist);
-                }
+                return false;
             }
-            catch (Exception ex)
+
+            if (newScrap.RequiredBundles != null && !AssetBundlesManager.Instance.BundlesLoaded(newScrap.RequiredBundles))
             {
-                LethalExpansion.Log.LogError(ex.Message);
+                return false;
+            }
+
+            if (newScrap.IncompatibleBundles != null && AssetBundlesManager.Instance.IncompatibleBundlesLoaded(newScrap.IncompatibleBundles))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static void InitializeScrap(Scrap newScrap, Sprite scrapSprite)
+        {
+            Item scrapItem = ScriptableObject.CreateInstance<Item>();
+            scrapItem.name = newScrap.name;
+            scrapItem.itemName = newScrap.itemName;
+            scrapItem.canBeGrabbedBeforeGameStart = true;
+            scrapItem.isScrap = true;
+            scrapItem.minValue = newScrap.minValue;
+            scrapItem.maxValue = newScrap.maxValue;
+            scrapItem.weight = (float)newScrap.weight / 100 + 1;
+
+            Whitelist.CheckAndRemoveIllegalComponents(newScrap.prefab.transform, Whitelist.ScrapPrefabComponentWhitelist);
+            scrapItem.spawnPrefab = newScrap.prefab;
+
+            scrapItem.twoHanded = newScrap.twoHanded;
+            scrapItem.twoHandedAnimation = newScrap.twoHandedAnimation;
+            scrapItem.requiresBattery = newScrap.requiresBattery;
+            scrapItem.isConductiveMetal = newScrap.isConductiveMetal;
+
+            scrapItem.itemIcon = scrapSprite;
+            scrapItem.syncGrabFunction = false;
+            scrapItem.syncUseFunction = false;
+            scrapItem.syncDiscardFunction = false;
+            scrapItem.syncInteractLRFunction = false;
+            scrapItem.verticalOffset = newScrap.verticalOffset;
+            scrapItem.restingRotation = newScrap.restingRotation;
+            scrapItem.positionOffset = newScrap.positionOffset;
+            scrapItem.rotationOffset = newScrap.rotationOffset;
+            scrapItem.meshOffset = false;
+            scrapItem.meshVariants = newScrap.meshVariants;
+            scrapItem.materialVariants = newScrap.materialVariants;
+            scrapItem.canBeInspected = false;
+
+            PhysicsProp physicsProp = newScrap.prefab.AddComponent<PhysicsProp>();
+            physicsProp.grabbable = true;
+            physicsProp.itemProperties = scrapItem;
+            physicsProp.mainObjectRenderer = newScrap.prefab.GetComponent<MeshRenderer>();
+
+            AudioSource audioSource = newScrap.prefab.AddComponent<AudioSource>();
+            audioSource.playOnAwake = false;
+            audioSource.spatialBlend = 1f;
+
+            Transform scanNodeObject = newScrap.prefab.transform.Find("ScanNode");
+            if (scanNodeObject != null)
+            {
+                ScanNodeProperties scanNode = scanNodeObject.gameObject.AddComponent<ScanNodeProperties>();
+                scanNode.maxRange = 13;
+                scanNode.minRange = 1;
+                scanNode.headerText = newScrap.itemName;
+                scanNode.subText = "Value: ";
+                scanNode.nodeType = 2;
             }
         }
     }
