@@ -1,7 +1,6 @@
 ﻿using UnityEngine;
 using TMPro;
 using System.Collections;
-using LethalExpansion;
 
 public class AutoScrollText : MonoBehaviour
 {

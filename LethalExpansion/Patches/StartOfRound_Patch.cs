@@ -1,10 +1,6 @@
 ﻿using HarmonyLib;
-using LethalExpansion.Utils;
-using System;
 using Unity.Netcode;
-using UnityEngine;
 using UnityEngine.SceneManagement;
-using static UnityEngine.Rendering.HighDefinition.ScalableSettingLevelParameter;
 
 namespace LethalExpansion.Patches
 {

@@ -1,5 +1,4 @@
-﻿using DunGen;
-using HarmonyLib;
+﻿using HarmonyLib;
 using LethalExpansion.Extenders;
 using LethalExpansion.Utils;
 using LethalSDK.Utils;

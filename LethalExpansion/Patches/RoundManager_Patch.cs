@@ -1,14 +1,4 @@
 ﻿using HarmonyLib;
-using System;
-using UnityEngine;
-using System.Collections.Generic;
-using System.Linq;
-using Unity.Netcode;
-using LethalExpansion.Utils;
-using DunGen;
-using UnityEngine.SceneManagement;
-using UnityEngine.AI;
-using Unity.AI.Navigation;
 
 namespace LethalExpansion.Patches
 {

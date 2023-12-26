@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using LethalExpansion.Utils;
 
 namespace LethalExpansion.Patches
 {

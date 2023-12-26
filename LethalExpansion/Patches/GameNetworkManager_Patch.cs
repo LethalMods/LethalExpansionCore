@@ -1,21 +1,10 @@
 ﻿using HarmonyLib;
 using System;
-using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
-using System.IO;
-using System.Reflection;
 using System.Collections.Generic;
 using LethalExpansion.Utils;
 using LethalSDK.ScriptableObjects;
-using BepInEx.Bootstrap;
-using LethalSDK.Component;
-using Unity.AI.Navigation;
-using Unity.Netcode.Components;
-using UnityEngine.AI;
-using UnityEngine.Rendering.HighDefinition;
-using UnityEngine.Rendering;
-using UnityEngine.Video;
 
 namespace LethalExpansion.Patches
 {
