@@ -15,7 +15,7 @@ namespace LethalExpansion.Patches
         [HarmonyPostfix]
         public static void SChangeAudioReverbForPlayer_Postfix(AudioReverbTrigger __instance)
         {
-            if(LethalExpansion.currentWaterSurface != null)
+            if (LethalExpansion.currentWaterSurface != null)
             {
                 LethalExpansion.currentWaterSurface.gameObject.SetActive(!__instance.disableAllWeather);
             }

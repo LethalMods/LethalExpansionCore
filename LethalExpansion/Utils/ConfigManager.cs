@@ -82,6 +82,7 @@ namespace LethalExpansion.Utils
                 LethalExpansion.Log.LogError(ex.Message);
             }
         }
+
         public object FindItemValue(string key)
         {
             try
@@ -94,6 +95,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public object FindItemValue(int index)
         {
             try
@@ -106,6 +108,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public object FindEntryValue(string key)
         {
             try
@@ -118,6 +121,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public object FindEntryValue(int index)
         {
             try
@@ -130,6 +134,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public bool RequireRestart(string key)
         {
             try
@@ -142,6 +147,7 @@ namespace LethalExpansion.Utils
                 return default;
             }
         }
+
         public bool RequireRestart(int index)
         {
             try
@@ -154,6 +160,7 @@ namespace LethalExpansion.Utils
                 return default;
             }
         }
+
         public string FindDescription(string key)
         {
             try
@@ -166,6 +173,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public string FindDescription(int index)
         {
             try
@@ -178,6 +186,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public (bool,bool) FindNetInfo(string key)
         {
             try
@@ -191,6 +200,7 @@ namespace LethalExpansion.Utils
                 return (default, default);
             }
         }
+
         public (bool, bool) FindNetInfo(int index)
         {
             try
@@ -203,6 +213,7 @@ namespace LethalExpansion.Utils
                 return (default, default);
             }
         }
+
         public object FindDefaultValue(string key)
         {
             try
@@ -215,6 +226,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public object FindDefaultValue(int index)
         {
             try
@@ -227,6 +239,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public bool MustBeSync(string key)
         {
             try
@@ -239,6 +252,7 @@ namespace LethalExpansion.Utils
                 return true;
             }
         }
+
         public bool MustBeSync(int index)
         {
             try
@@ -251,6 +265,7 @@ namespace LethalExpansion.Utils
                 return true;
             }
         }
+
         public bool SetItemValue(string key, object value)
         {
             ConfigItem configItem = items.First(item => item.Key == key);
@@ -269,6 +284,7 @@ namespace LethalExpansion.Utils
             }
             return false;
         }
+
         public bool SetEntryValue(string key, object value)
         {
             try
@@ -282,6 +298,7 @@ namespace LethalExpansion.Utils
                 return false;
             }
         }
+
         public bool SetItemValue(int index, string value, char type)
         {
             if (!items[index].RequireRestart)
@@ -315,6 +332,7 @@ namespace LethalExpansion.Utils
             }
             return false;
         }
+
         public bool SetEntryValue(int index, string value, char type)
         {
             try
@@ -344,6 +362,7 @@ namespace LethalExpansion.Utils
                 return false;
             }
         }
+
         public (object,int) FindValueAndIndex(string key)
         {
             try
@@ -356,6 +375,7 @@ namespace LethalExpansion.Utils
                 return (null,-1);
             }
         }
+
         public int FindIndex(string key)
         {
             try
@@ -390,6 +410,7 @@ namespace LethalExpansion.Utils
                 return default(T);
             }
         }
+
         public T FindItemValue<T>(int index)
         {
             try
@@ -411,6 +432,7 @@ namespace LethalExpansion.Utils
                 return default(T);
             }
         }
+
         public T FindEntryValue<T>(string key)
         {
             try
@@ -432,6 +454,7 @@ namespace LethalExpansion.Utils
                 return default(T);
             }
         }
+
         public T FindEntryValue<T>(int index)
         {
             try
@@ -453,6 +476,7 @@ namespace LethalExpansion.Utils
                 return default(T);
             }
         }
+
         public bool SetItemValue<T>(string key, T value)
         {
             ConfigItem configItem = items.First(item => item.Key == key);
@@ -479,6 +503,7 @@ namespace LethalExpansion.Utils
             }
             return false;
         }
+
         public bool SetEntryValue<T>(string key, T value)
         {
             try
@@ -501,6 +526,7 @@ namespace LethalExpansion.Utils
                 return false;
             }
         }
+
         public bool SetItemValue<T>(int index, T value)
         {
             if (!items[index].RequireRestart)
@@ -516,9 +542,10 @@ namespace LethalExpansion.Utils
                     return false;
                 }
             }
-            return false;
 
+            return false;
         }
+
         public bool SetEntryValue<T>(int index, T value)
         {
             try
@@ -532,7 +559,8 @@ namespace LethalExpansion.Utils
                 return false;
             }
         }
-        public (T,int) FindValueAndIndex<T>(string key)
+
+        public (T, int) FindValueAndIndex<T>(string key)
         {
             try
             {
@@ -550,7 +578,7 @@ namespace LethalExpansion.Utils
             catch (Exception ex)
             {
                 LethalExpansion.Log.LogError(ex.Message);
-                return (default(T),-1);
+                return (default(T), -1);
             }
         }
 
@@ -566,6 +594,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public int GetCount()
         {
             try
@@ -578,6 +607,7 @@ namespace LethalExpansion.Utils
                 return -1;
             }
         }
+
         public int GetEntriesCount()
         {
             try
@@ -604,6 +634,7 @@ namespace LethalExpansion.Utils
                 return null;
             }
         }
+
         public T ReadConfigValue<T>(string key)
         {
             try
@@ -616,6 +647,7 @@ namespace LethalExpansion.Utils
                 return default(T);
             }
         }
+
         public bool WriteConfigValue(string key, object value)
         {
             try
@@ -631,6 +663,7 @@ namespace LethalExpansion.Utils
                 return false;
             }
         }
+
         public bool WriteConfigValue<T>(string key, T value)
         {
             try

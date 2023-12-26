@@ -24,6 +24,7 @@ namespace LethalExpansion.Patches
             }
             LethalExpansion.Log.LogInfo("Game started.");
         }
+
         [HarmonyPatch("OnPlayerConnectedClientRpc")]
         [HarmonyPostfix]
         static void OnPlayerConnectedClientRpc_Postfix(StartOfRound __instance, ulong clientId, int connectedPlayers, ulong[] connectedPlayerIdsOrdered, int assignedPlayerObjectId, int serverMoneyAmount, int levelID, int profitQuota, int timeUntilDeadline, int quotaFulfilled, int randomSeed)
@@ -36,9 +37,10 @@ namespace LethalExpansion.Patches
             }
             else
             {
-                NetworkPacketManager.Instance.sendPacket(NetworkPacketManager.packetType.request, "clientinfo", string.Empty, (long)clientId);
+                NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "clientinfo", string.Empty, (long)clientId);
             }
         }
+
         [HarmonyPatch(nameof(StartOfRound.SetMapScreenInfoToCurrentLevel))]
         [HarmonyPostfix]
         static void SetMapScreenInfoToCurrentLevel_Postfix(StartOfRound __instance)
@@ -49,6 +51,7 @@ namespace LethalExpansion.Patches
                 obj.ResetScrolling();
             }
         }
+
         [HarmonyPatch(nameof(StartOfRound.SetPlanetsWeather))]
         [HarmonyPrefix]
         static bool SetPlanetsWeather_Prefix(StartOfRound __instance)
@@ -62,11 +65,12 @@ namespace LethalExpansion.Patches
             {
                 if (LethalExpansion.alreadypatched)
                 {
-                    NetworkPacketManager.Instance.sendPacket(NetworkPacketManager.packetType.request, "hostweathers", string.Empty, 0);
+                    NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "hostweathers", string.Empty, 0);
                 }
                 return false;
             }
         }
+
         [HarmonyPatch(nameof(StartOfRound.SetPlanetsWeather))]
         [HarmonyPostfix]
         static void SetPlanetsWeather_Postfix(StartOfRound __instance)
@@ -81,10 +85,11 @@ namespace LethalExpansion.Patches
                     weathers += (int)__instance.levels[i].currentWeather + "&";
                 }
                 weathers = weathers.Remove(weathers.Length - 1);
-                NetworkPacketManager.Instance.sendPacket(packetType.data, "hostweathers", weathers, -1, false);
+                NetworkPacketManager.Instance.SendPacket(PacketType.Data, "hostweathers", weathers, -1, false);
                 LethalExpansion.weathersReadyToShare = true;
             }
         }
+
         [HarmonyPatch(nameof(StartOfRound.ChangeLevel))]
         [HarmonyPrefix]
         static bool ChangeLevel_Prefix(StartOfRound __instance, ref int levelID)
@@ -102,57 +107,8 @@ namespace LethalExpansion.Patches
                     levelID = 0;
                 }
             }
+
             return true;
         }
-        /*[HarmonyPatch(nameof(StartOfRound.KickPlayer))]
-        [HarmonyPrefix]
-        public static bool KickPlayer_Prefix(StartOfRound __instance, int playerObjToKick)
-        {
-            LethalExpansion.Log.LogError(__instance.allPlayerScripts.Length);
-            foreach (var playerObj in __instance.allPlayerScripts)
-            {
-                LethalExpansion.Log.LogError(playerObj.name);
-            }
-            LethalExpansion.Log.LogError(playerObjToKick);
-            LethalExpansion.Log.LogError(__instance.allPlayerScripts[playerObjToKick].actualClientId);
-            LethalExpansion.Log.LogError(__instance.allPlayerScripts[playerObjToKick].NetworkObjectId);
-            LethalExpansion.Log.LogError(__instance.allPlayerScripts[playerObjToKick].OwnerClientId);
-            LethalExpansion.Log.LogError("1");
-            if (!__instance.allPlayerScripts[playerObjToKick].isPlayerControlled && !__instance.allPlayerScripts[playerObjToKick].isPlayerDead)
-            {
-                LethalExpansion.Log.LogError("2");
-                return false;
-            }
-            if (!__instance.IsServer)
-            {
-                LethalExpansion.Log.LogError("3");
-                return false;
-            }
-            LethalExpansion.Log.LogError("4");
-            if (!GameNetworkManager.Instance.disableSteam)
-            {
-                LethalExpansion.Log.LogError("5");
-                ulong playerSteamId = StartOfRound.Instance.allPlayerScripts[playerObjToKick].playerSteamId;
-                LethalExpansion.Log.LogError("6");
-                if (!__instance.KickedClientIds.Contains(playerSteamId))
-                {
-                    LethalExpansion.Log.LogError("7");
-                    __instance.KickedClientIds.Add(playerSteamId);
-                }
-            }
-            LethalExpansion.Log.LogError("8");
-            try
-            {
-                NetworkManager.Singleton.DisconnectClient(__instance.allPlayerScripts[playerObjToKick].actualClientId);
-            }
-            catch(Exception ex)
-            {
-                LethalExpansion.Log.LogError(ex);
-            }
-            LethalExpansion.Log.LogError("9");
-            HUDManager.Instance.AddTextToChatOnServer(string.Format("[playerNum{0}] was kicked.", playerObjToKick), -1);
-            LethalExpansion.Log.LogError("10");
-            return false;
-        }*/
     }
 }

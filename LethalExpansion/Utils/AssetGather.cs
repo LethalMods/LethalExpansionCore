@@ -25,6 +25,7 @@ namespace LethalExpansion.Utils
                 return _instance;
             }
         }
+
         //Audio Clips
         public Dictionary<String, AudioClip> audioClips = new Dictionary<String, AudioClip>();
         //Audio Mixers
@@ -51,41 +52,49 @@ namespace LethalExpansion.Utils
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Audio Mixers");
             foreach (var item in audioMixers)
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Planet Prefabs");
             foreach (var item in planetPrefabs)
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Map Objects");
             foreach (var item in mapObjects)
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Outside Objects");
             foreach (var item in outsideObjects)
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Scraps");
             foreach (var item in scraps)
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Level Ambiances");
             foreach (var item in levelAmbiances)
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Enemies");
             foreach (var item in enemies)
             {
                 LethalExpansion.Log.LogInfo(item.Key);
             }
+
             LethalExpansion.Log.LogInfo("Sprites");
             foreach (var item in sprites)
             {
@@ -101,6 +110,7 @@ namespace LethalExpansion.Utils
                 audioClips.Add(clip.name, clip);
             }
         }
+
         public void AddAudioClip(string name, AudioClip clip)
         {
             if (clip != null && !audioClips.ContainsKey(name) && !audioClips.ContainsValue(clip))
@@ -109,6 +119,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Audio Mixers
         public void AddAudioMixer(AudioMixer mixer)
         {
@@ -126,6 +137,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Planet Prefabs
         public void AddPlanetPrefabs(GameObject prefab)
         {
@@ -134,6 +146,7 @@ namespace LethalExpansion.Utils
                 planetPrefabs.Add(prefab.name, prefab);
             }
         }
+
         public void AddPlanetPrefabs(string name, GameObject prefab)
         {
             if (prefab != null && !planetPrefabs.ContainsKey(name) && !planetPrefabs.ContainsValue(prefab))
@@ -142,6 +155,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Map Objects
         public void AddMapObjects(GameObject mapObject)
         {
@@ -151,6 +165,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Outside Objects
         public void AddOutsideObject(SpawnableOutsideObject outsideObject)
         {
@@ -160,6 +175,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Scraps
         public void AddScrap(Item scrap)
         {
@@ -169,6 +185,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Level Ambiances
         public void AddLevelAmbiances(LevelAmbienceLibrary levelAmbiance)
         {
@@ -178,6 +195,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Enemies
         public void AddEnemies(EnemyType enemie)
         {
@@ -187,6 +205,7 @@ namespace LethalExpansion.Utils
             }
         }
         #endregion
+
         #region Sprites
         public void AddSprites(Sprite sprite)
         {
@@ -195,6 +214,7 @@ namespace LethalExpansion.Utils
                 sprites.Add(sprite.name, sprite);
             }
         }
+
         public void AddSprites(string name, Sprite sprite)
         {
             if (sprite != null && !sprites.ContainsKey(name) && !sprites.ContainsValue(sprite))

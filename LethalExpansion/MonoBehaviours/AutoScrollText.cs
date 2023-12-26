@@ -19,6 +19,7 @@ public class AutoScrollText : MonoBehaviour
         textMeshPro = this.GetComponent<TextMeshProUGUI>();
         InitializeScrolling();
     }
+
     private void InitializeScrolling()
     {
         if (textMeshPro != null)
@@ -60,6 +61,7 @@ public class AutoScrollText : MonoBehaviour
             }
         }
     }
+
     public void ResetScrolling()
     {
         StopAllCoroutines();

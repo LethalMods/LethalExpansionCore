@@ -33,13 +33,14 @@ namespace LethalExpansion.Patches
                 {
                     showWarning = false;
                 }
-                if(showWarning)
+                if (showWarning)
                 {
                     LethalExpansion.Log.LogWarning("Warning, this mod is not made for this Game Version, this could cause unexpected behaviors.");
                     LethalExpansion.Log.LogWarning(string.Format("Game version: {0}", __instance.gameVersionNum));
                     LethalExpansion.Log.LogWarning(string.Format("Compatible mod versions: {0}", string.Join(",", LethalExpansion.CompatibleGameVersions)));
                 }
             }
+
             AssetBank mainBank = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<ModManifest>("Assets/Mods/LethalExpansion/modmanifest.asset").assetBank;
             if (mainBank != null)
             {
@@ -53,104 +54,123 @@ namespace LethalExpansion.Patches
                     }
                 }
             }
+
             if (ConfigManager.Instance.FindItemValue<bool>("LoadModules"))
             {
                 Sprite scrapSprite = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<Sprite>("Assets/Mods/LethalExpansion/Sprites/ScrapItemIcon2.png");
                 try
                 {
-                    foreach (KeyValuePair<String,(AssetBundle, ModManifest)> bundle in AssetBundlesManager.Instance.assetBundles)
+                    foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
                     {
-                        (AssetBundle, ModManifest) bundle2 = AssetBundlesManager.Instance.Load(bundle.Key);
+                        (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 
-                        if (bundle2.Item1 != null && bundle2.Item2 != null)
+                        if (bundle == null || manifest == null)
                         {
-                            if(bundle2.Item2.scraps != null && bundle2.Item2.scraps.Length > 0)
+                            continue;
+                        }
+
+                        if (manifest.scraps == null || manifest.scraps.Length == 0)
+                        {
+                            continue;
+                        }
+
+                        foreach (var newScrap in manifest.scraps)
+                        {
+                            if (newScrap == null || newScrap.prefab == null)
                             {
-                                foreach (var newScrap in bundle2.Item2.scraps)
+                                continue;
+                            }
+
+                            if (newScrap.RequiredBundles != null && !AssetBundlesManager.Instance.BundlesLoaded(newScrap.RequiredBundles))
+                            {
+                                continue;
+                            }
+
+                            if (newScrap.IncompatibleBundles != null && AssetBundlesManager.Instance.IncompatibleBundlesLoaded(newScrap.IncompatibleBundles))
+                            {
+                                continue;
+                            }
+
+                            Item scrapItem = ScriptableObject.CreateInstance<Item>();
+                            scrapItem.name = newScrap.name;
+                            scrapItem.itemName = newScrap.itemName;
+                            scrapItem.canBeGrabbedBeforeGameStart = true;
+                            scrapItem.isScrap = true;
+                            scrapItem.minValue = newScrap.minValue;
+                            scrapItem.maxValue = newScrap.maxValue;
+                            scrapItem.weight = (float)newScrap.weight / 100 + 1;
+
+                            CheckAndRemoveIllegalComponents(newScrap.prefab.transform, scrapPrefabComponentWhitelist);
+                            scrapItem.spawnPrefab = newScrap.prefab;
+
+                            scrapItem.twoHanded = newScrap.twoHanded;
+                            scrapItem.twoHandedAnimation = newScrap.twoHandedAnimation;
+                            scrapItem.requiresBattery = newScrap.requiresBattery;
+                            scrapItem.isConductiveMetal = newScrap.isConductiveMetal;
+
+                            scrapItem.itemIcon = scrapSprite;
+                            scrapItem.syncGrabFunction = false;
+                            scrapItem.syncUseFunction = false;
+                            scrapItem.syncDiscardFunction = false;
+                            scrapItem.syncInteractLRFunction = false;
+                            scrapItem.verticalOffset = newScrap.verticalOffset;
+                            scrapItem.restingRotation = newScrap.restingRotation;
+                            scrapItem.positionOffset = newScrap.positionOffset;
+                            scrapItem.rotationOffset = newScrap.rotationOffset;
+                            scrapItem.meshOffset = false;
+                            scrapItem.meshVariants = newScrap.meshVariants;
+                            scrapItem.materialVariants = newScrap.materialVariants;
+                            scrapItem.canBeInspected = false;
+
+                            PhysicsProp physicsProp = newScrap.prefab.AddComponent<PhysicsProp>();
+                            physicsProp.grabbable = true;
+                            physicsProp.itemProperties = scrapItem;
+                            physicsProp.mainObjectRenderer = newScrap.prefab.GetComponent<MeshRenderer>();
+
+                            AudioSource audioSource = newScrap.prefab.AddComponent<AudioSource>();
+                            audioSource.playOnAwake = false;
+                            audioSource.spatialBlend = 1f;
+
+                            Transform scanNodeObject = newScrap.prefab.transform.Find("ScanNode");
+                            if (scanNodeObject != null)
+                            {
+                                ScanNodeProperties scanNode = scanNodeObject.gameObject.AddComponent<ScanNodeProperties>();
+                                scanNode.maxRange = 13;
+                                scanNode.minRange = 1;
+                                scanNode.headerText = newScrap.itemName;
+                                scanNode.subText = "Value: ";
+                                scanNode.nodeType = 2;
+                            }
+
+                            try
+                            {
+                                __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(newScrap.prefab);
+                                LethalExpansion.Log.LogInfo(newScrap.itemName + " Scrap registered.");
+                            }
+                            catch (Exception ex)
+                            {
+                                LethalExpansion.Log.LogError(ex.Message);
+                            }
+                        }
+
+                        /*foreach (var newMoon in bundle2.Item2.moons)
+                        {
+                            if (newMoon != null && newMoon.MainPrefab != null)
+                            {
+                                CheckAndRemoveIllegalComponents(newMoon.MainPrefab.transform, moonPrefabComponentWhitelist);
+                            }
+                        }*/
+
+                        if (manifest.assetBank != null && manifest.assetBank.NetworkPrefabs() != null && manifest.assetBank.NetworkPrefabs().Length > 0)
+                        {
+                            foreach (var networkprefab in manifest.assetBank.NetworkPrefabs())
+                            {
+                                if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
                                 {
-                                    if (newScrap != null && newScrap.prefab != null && (newScrap.RequiredBundles == null || AssetBundlesManager.Instance.BundlesLoaded(newScrap.RequiredBundles)) && (newScrap.IncompatibleBundles == null || !AssetBundlesManager.Instance.IncompatibleBundlesLoaded(newScrap.IncompatibleBundles)))
-                                    {
-                                        Item tmpItem = ScriptableObject.CreateInstance<Item>();
-
-                                        tmpItem.name = newScrap.name;
-                                        tmpItem.itemName = newScrap.itemName;
-                                        tmpItem.canBeGrabbedBeforeGameStart = true;
-                                        tmpItem.isScrap = true;
-                                        tmpItem.minValue = newScrap.minValue;
-                                        tmpItem.maxValue = newScrap.maxValue;
-                                        tmpItem.weight = (float)newScrap.weight / 100 + 1;
-
-                                        CheckAndRemoveIllegalComponents(newScrap.prefab.transform, scrapPrefabComponentWhitelist);
-                                        tmpItem.spawnPrefab = newScrap.prefab;
-
-                                        tmpItem.twoHanded = newScrap.twoHanded;
-                                        tmpItem.twoHandedAnimation = newScrap.twoHandedAnimation;
-                                        tmpItem.requiresBattery = newScrap.requiresBattery;
-                                        tmpItem.isConductiveMetal = newScrap.isConductiveMetal;
-
-                                        tmpItem.itemIcon = scrapSprite;
-                                        tmpItem.syncGrabFunction = false;
-                                        tmpItem.syncUseFunction = false;
-                                        tmpItem.syncDiscardFunction = false;
-                                        tmpItem.syncInteractLRFunction = false;
-                                        tmpItem.verticalOffset = newScrap.verticalOffset;
-                                        tmpItem.restingRotation = newScrap.restingRotation;
-                                        tmpItem.positionOffset = newScrap.positionOffset;
-                                        tmpItem.rotationOffset = newScrap.rotationOffset;
-                                        tmpItem.meshOffset = false;
-                                        tmpItem.meshVariants = newScrap.meshVariants;
-                                        tmpItem.materialVariants = newScrap.materialVariants;
-                                        tmpItem.canBeInspected = false;
-
-                                        PhysicsProp physicsProp = newScrap.prefab.AddComponent<PhysicsProp>();
-                                        physicsProp.grabbable = true;
-                                        physicsProp.itemProperties = tmpItem;
-                                        physicsProp.mainObjectRenderer = newScrap.prefab.GetComponent<MeshRenderer>();
-
-                                        AudioSource audioSource = newScrap.prefab.AddComponent<AudioSource>();
-                                        audioSource.playOnAwake = false;
-                                        audioSource.spatialBlend = 1f;
-
-                                        Transform scanNodeObject = newScrap.prefab.transform.Find("ScanNode");
-                                        if (scanNodeObject != null)
-                                        {
-                                            ScanNodeProperties scanNode = scanNodeObject.gameObject.AddComponent<ScanNodeProperties>();
-                                            scanNode.maxRange = 13;
-                                            scanNode.minRange = 1;
-                                            scanNode.headerText = newScrap.itemName;
-                                            scanNode.subText = "Value: ";
-                                            scanNode.nodeType = 2;
-                                        }
-                                        try
-                                        {
-                                            __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(newScrap.prefab);
-                                            LethalExpansion.Log.LogInfo(newScrap.itemName + " Scrap registered.");
-                                        }
-                                        catch (Exception ex)
-                                        {
-                                            LethalExpansion.Log.LogError(ex.Message);
-                                        }
-                                    }
-                                }
-                                /*foreach (var newMoon in bundle2.Item2.moons)
-                                {
-                                    if (newMoon != null && newMoon.MainPrefab != null)
-                                    {
-                                        CheckAndRemoveIllegalComponents(newMoon.MainPrefab.transform, moonPrefabComponentWhitelist);
-                                    }
-                                }*/
-                                if (bundle2.Item2.assetBank != null && bundle2.Item2.assetBank.NetworkPrefabs() != null && bundle2.Item2.assetBank.NetworkPrefabs().Length > 0)
-                                {
-                                    foreach (var networkprefab in bundle2.Item2.assetBank.NetworkPrefabs())
-                                    {
-                                        if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
-                                        {
-                                            GameObject prefab = bundle.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath);
-                                            CheckAndRemoveIllegalComponents(bundle.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, scrapPrefabComponentWhitelist);
-                                            __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
-                                            LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
-                                        }
-                                    }
+                                    GameObject prefab = bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath);
+                                    CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, scrapPrefabComponentWhitelist);
+                                    __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
+                                    LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
                                 }
                             }
                         }
@@ -161,12 +181,14 @@ namespace LethalExpansion.Patches
                     LethalExpansion.Log.LogError(ex.Message);
                 }
             }
+
             /*LethalExpansion.Log.LogInfo("1");
             var objtest = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>("Assets/Mods/LethalExpansion/Prefabs/itemshipanimcontainer.prefab");
             GameObject.DontDestroyOnLoad(objtest);
             __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(objtest);
             LethalExpansion.Log.LogInfo("2");*/
         }
+
         private static List<Type> scrapPrefabComponentWhitelist = new List<Type> {
             //Base
             typeof(Transform),
@@ -232,6 +254,7 @@ namespace LethalExpansion.Patches
             //Video
             typeof(VideoPlayer)
         };
+
         private static List<Type> moonPrefabComponentWhitelist = new List<Type> {
             //Base
             typeof(Transform),
@@ -328,6 +351,7 @@ namespace LethalExpansion.Patches
             typeof(SI_AudioOutputInterface),
             typeof(PlayerShip)
         };
+
         static void CheckAndRemoveIllegalComponents(Transform prefab, List<Type> whitelist)
         {
             try

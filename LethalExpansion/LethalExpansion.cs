@@ -15,8 +15,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.SceneManagement;
-using LethalExpansion.Patches.Monsters;
-using LethalExpansion.Utils.HUD;
 using UnityEngine.Audio;
 using DunGen;
 using UnityEngine.UIElements;
@@ -43,9 +41,11 @@ namespace LethalExpansion
         private const string PluginName = "LethalExpansion";
         private const string VersionString = "1.3.5";
         public static readonly Version ModVersion = new Version(VersionString);
+
         private readonly Version[] CompatibleModVersions = {
             new Version(1, 3, 5)
         };
+
         private readonly Dictionary<string, compatibility> CompatibleMods = new Dictionary<string, compatibility>
         {
             { "com.sinai.unityexplorer",compatibility.medium },
@@ -57,6 +57,7 @@ namespace LethalExpansion
             { "Television_Controller",compatibility.bad },
             { "beeisyou.LandmineFix",compatibility.perfect }
         };
+
         private enum compatibility
         {
             unknown = 0,
@@ -67,7 +68,8 @@ namespace LethalExpansion
             critical = 5,
             incompatible = 6
         }
-        List<PluginInfo> loadedPlugins = new List<PluginInfo>();
+
+        List<BepInEx.PluginInfo> loadedPlugins = new List<BepInEx.PluginInfo>();
 
         public static readonly int[] CompatibleGameVersions = {45};
 
@@ -118,35 +120,7 @@ namespace LethalExpansion
 
             config = Config;
 
-            ConfigManager.Instance.AddItem(new ConfigItem("GlobalTimeSpeedMultiplier", 1.4f, "Time", "Change the global time speed", 0.1f, 3f, sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("LengthOfHours", 60, "Time", "Change amount of seconds in one hour", 1, 300));
-            ConfigManager.Instance.AddItem(new ConfigItem("NumberOfHours", 18, "Time", "Max lenght of an Expedition in hours. (Begin at 6 AM | 18 = Midnight)", 6, 20));
-            ConfigManager.Instance.AddItem(new ConfigItem("DeadlineDaysAmount", 3, "Expeditions", "Change amount of days for the Quota.", 1, 9, sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("StartingCredits", 60, "Expeditions", "Change amount of starting Credit.", 0, 1000, sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("MoonsRoutePricesMultiplier", 1f, "Moons", "Change the Cost of the Moon Routes.", 0f, 5f));
-            ConfigManager.Instance.AddItem(new ConfigItem("StartingQuota", 130, "Expeditions", "Change the starting Quota.", 0, 1000, sync: true, optional:true));
-            ConfigManager.Instance.AddItem(new ConfigItem("ScrapAmountMultiplier", 1f, "Dungeons", "Change the amount of Scraps in dungeons.", 0f, 10f));
-            ConfigManager.Instance.AddItem(new ConfigItem("ScrapValueMultiplier", 0.4f, "Dungeons", "Change the value of Scraps.", 0f, 10f));
-            ConfigManager.Instance.AddItem(new ConfigItem("MapSizeMultiplier", 1.5f, "Dungeons", "Change the size of the Dungeons. (Can crash when under 1.0)", 0.8f, 10f));
-            ConfigManager.Instance.AddItem(new ConfigItem("PreventMineToExplodeWithItems", false, "Dungeons", "Prevent Landmines to explode by dropping items on them"));
-            ConfigManager.Instance.AddItem(new ConfigItem("MineActivationWeight", 0.15f, "Dungeons", "Set the minimal weight to prevent Landmine's explosion (0.15 = 16 lb, Player = 2.0)", 0.01f, 5f));
-            ConfigManager.Instance.AddItem(new ConfigItem("WeightUnit", 0, "HUD", "Change the carried Weight unit : 0 = Pounds (lb), 1 = Kilograms (kg) and 2 = Both", 0, 2, sync: false));
-            ConfigManager.Instance.AddItem(new ConfigItem("ConvertPoundsToKilograms", true, "HUD", "Convert Pounds into Kilograms (16 lb = 7 kg) (Only effective if WeightUnit = 1)", sync: false));
-            ConfigManager.Instance.AddItem(new ConfigItem("PreventScrapWipeWhenAllPlayersDie", false, "Expeditions", "Prevent the Scraps Wipe when all players die."));
-            ConfigManager.Instance.AddItem(new ConfigItem("24HoursClock", false, "HUD", "Display a 24h clock instead of 12h.", sync: false));
-            ConfigManager.Instance.AddItem(new ConfigItem("ClockAlwaysVisible", false, "HUD", "Display clock while inside of the Ship."));
-            ConfigManager.Instance.AddItem(new ConfigItem("AutomaticDeadline", false, "Expeditions", "Automatically increase the Deadline depending of the required quota."));
-            ConfigManager.Instance.AddItem(new ConfigItem("AutomaticDeadlineStage", 300, "Expeditions", "Increase the quota deadline of one day each time the quota exceeds this value.", 100, 1000));
             ConfigManager.Instance.AddItem(new ConfigItem("LoadModules", true, "Modules", "Load SDK Modules that add new content to the game. Disable it to play with Vanilla players. (RESTART REQUIRED)", sync:false, optional: false, requireRestart:true));
-            ConfigManager.Instance.AddItem(new ConfigItem("MaxItemsInShip", 45, "Expeditions", "Change the Items cap can be kept in the ship.", 10, 500));
-            ConfigManager.Instance.AddItem(new ConfigItem("ShowMoonWeatherInCatalogue", true, "HUD", "Display the current weather of Moons in the Terminal's Moon Catalogue.", sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("ShowMoonRankInCatalogue", false, "HUD", "Display the rank of Moons in the Terminal's Moon Catalogue.", sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("ShowMoonPriceInCatalogue", false, "HUD", "Display the route price of Moons in the Terminal's Moon Catalogue.", sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("QuotaIncreaseSteepness", 16, "Expeditions", "Change the Quota Increase Steepness. (Highter = less steep exponential increase)", 0, 32, sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("QuotaBaseIncrease", 100, "Expeditions", "Change the Quota Base Increase.", 0, 300, sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("KickPlayerWithoutMod", false, "Lobby", "Kick the players without Lethal Expansion installer. (Will be kicked anyway if LoadModules is True)", sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("BrutalCompanyPlusCompatibility", false, "Compatibility", "Leave Brutal Company Plus control the Quota settings.", sync: true));
-            ConfigManager.Instance.AddItem(new ConfigItem("SettingsDebug", false, "Debug", "Show an output of every settings in the Console. (The Console must listen Info messages)", sync: false));
 
             ConfigManager.Instance.ReadConfig();
 
@@ -160,28 +134,14 @@ namespace LethalExpansion
             Harmony.PatchAll(typeof(GameNetworkManager_Patch));
             Harmony.PatchAll(typeof(Terminal_Patch));
             Harmony.PatchAll(typeof(MenuManager_Patch));
-            Harmony.PatchAll(typeof(GrabbableObject_Patch));
             Harmony.PatchAll(typeof(RoundManager_Patch));
-            Harmony.PatchAll(typeof(TimeOfDay_Patch));
             Harmony.PatchAll(typeof(HUDManager_Patch));
             Harmony.PatchAll(typeof(StartOfRound_Patch));
             Harmony.PatchAll(typeof(EntranceTeleport_Patch));
-            Harmony.PatchAll(typeof(Landmine_Patch));
             Harmony.PatchAll(typeof(AudioReverbTrigger_Patch));
             Harmony.PatchAll(typeof(InteractTrigger_Patch));
             Harmony.PatchAll(typeof(RuntimeDungeon));
             Harmony harmony = new Harmony("LethalExpansion");
-            MethodInfo BaboonBirdAI_GrabScrap_Method = AccessTools.Method(typeof(BaboonBirdAI), "GrabScrap", null, null);
-            MethodInfo HoarderBugAI_GrabItem_Method = AccessTools.Method(typeof(HoarderBugAI), "GrabItem", null, null);
-            MethodInfo MonsterGrabItem_Method = AccessTools.Method(typeof(MonsterGrabItem_Patch), "MonsterGrabItem", null, null);
-            harmony.Patch(BaboonBirdAI_GrabScrap_Method, null, new HarmonyMethod(MonsterGrabItem_Method), null, null, null);
-            harmony.Patch(HoarderBugAI_GrabItem_Method, null, new HarmonyMethod(MonsterGrabItem_Method), null, null, null);
-            MethodInfo HoarderBugAI_DropItem_Method = AccessTools.Method(typeof(HoarderBugAI), "DropItem", null, null);
-            MethodInfo MonsterDropItem_Patch_Method = AccessTools.Method(typeof(MonsterGrabItem_Patch), "MonsterDropItem_Patch", null, null);
-            MethodInfo HoarderBugAI_KillEnemy_Method = AccessTools.Method(typeof(HoarderBugAI), "KillEnemy", null, null);
-            MethodInfo KillEnemy_Patch_Method = AccessTools.Method(typeof(MonsterGrabItem_Patch), "KillEnemy_Patch", null, null);
-            harmony.Patch(HoarderBugAI_DropItem_Method, null, new HarmonyMethod(MonsterDropItem_Patch_Method), null, null, null);
-            harmony.Patch(HoarderBugAI_KillEnemy_Method, null, new HarmonyMethod(KillEnemy_Patch_Method), null, null, null);
 
             HDRenderPipelineAsset hdAsset = GraphicsSettings.currentRenderPipeline as HDRenderPipelineAsset;
             if (hdAsset != null)
@@ -198,14 +158,17 @@ namespace LethalExpansion
 
             Logger.LogInfo($"PluginName: {PluginName}, VersionString: {VersionString} is loaded.");
         }
-        List<PluginInfo> GetLoadedPlugins()
+
+        List<BepInEx.PluginInfo> GetLoadedPlugins()
         {
             return Chainloader.PluginInfos.Values.ToList();
         }
+
         private int width = 256;
         private int height = 256;
         private int depth = 20;
         private float scale = 20f;
+
         float[,] GenerateHeights()
         {
             float[,] heights = new float[width, height];
@@ -226,6 +189,7 @@ namespace LethalExpansion
 
             return Mathf.PerlinNoise(xCoord, yCoord);
         }
+
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
             Logger.LogInfo("Loading scene: " + scene.name);
@@ -233,6 +197,7 @@ namespace LethalExpansion
             {
                 networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
             }
+
             if (scene.name == "MainMenu")
             {
                 sessionWaiting = true;
@@ -246,15 +211,14 @@ namespace LethalExpansion
 
                 AssetGather.Instance.AddAudioMixer(GameObject.Find("Canvas/MenuManager").GetComponent<AudioSource>().outputAudioMixerGroup.audioMixer);
 
-                SettingsMenu.Instance.InitSettingsMenu();
-
                 //VersionChecker.CheckVersion().GetAwaiter();
 
-                if(lastKickReason != null && lastKickReason.Length > 0)
+                if (lastKickReason != null && lastKickReason.Length > 0)
                 {
                     PopupManager.Instance.InstantiatePopup(scene, "Kicked from Lobby", $"You have been kicked\r\nReason: {lastKickReason}", button2: "Ignore");
                 }
             }
+
             if (scene.name == "CompanyBuilding")
             {
                 /*GameObject Labyrinth = Instantiate(AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>("Assets/Mods/LethalExpansion/Prefabs/labyrinth.prefab"));
@@ -263,6 +227,7 @@ namespace LethalExpansion
                 SpaceLight.SetActive(false);
                 terrainfixer.SetActive(false);
             }
+
             if (scene.name == "SampleSceneRelay")
             {
                 SpaceLight = Instantiate(AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>("Assets/Mods/LethalExpansion/Prefabs/SpaceLight.prefab"));
@@ -332,11 +297,13 @@ namespace LethalExpansion
 
                 isInGame = true;
             }
+
             if (scene.name.StartsWith("Level"))
             {
                 SpaceLight.SetActive(false);
                 terrainfixer.SetActive(false);
             }
+
             if (scene.name == "InitSceneLaunchOptions" && isInGame)
             {
                 SpaceLight.SetActive(false);
@@ -345,33 +312,26 @@ namespace LethalExpansion
                 {
                     obj.SetActive(false);
                 }
-                if (ConfigManager.Instance.FindItemValue<bool>("SettingsDebug"))
-                {
-                    foreach(var entry in ConfigManager.Instance.GetAll())
-                    {
-                        Log.LogInfo("==========");
-                        Log.LogInfo(entry.Key);
-                        Log.LogInfo(entry.Value);
-                        Log.LogInfo(entry.DefaultValue);
-                        Log.LogInfo(entry.Sync);
-                    }
-                }
+
                 //StartCoroutine(LoadCustomMoon(scene));
-                if (Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab != null)
+                GameObject moonPrefab = Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab;
+                if (moonPrefab != null)
                 {
-                    if (Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab.transform != null)
+                    if (moonPrefab.transform != null)
                     {
-                        CheckAndRemoveIllegalComponents(Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab.transform);
-                        GameObject mainPrefab = GameObject.Instantiate(Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab);
+                        CheckAndRemoveIllegalComponents(moonPrefab.transform);
+                        GameObject mainPrefab = GameObject.Instantiate(moonPrefab);
                         currentWaterSurface = mainPrefab.transform.Find("Environment/Water");
                         if (mainPrefab != null)
                         {
                             SceneManager.MoveGameObjectToScene(mainPrefab, scene);
+
                             var DiageticBackground = mainPrefab.transform.Find("Systems/Audio/DiageticBackground");
                             if (DiageticBackground != null)
                             {
                                 DiageticBackground.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                             }
+
                             Terrain[] Terrains = mainPrefab.GetComponentsInChildren<Terrain>();
                             if (Terrains != null && Terrains.Length > 0)
                             {
@@ -383,6 +343,7 @@ namespace LethalExpansion
                         }
                     }
                 }
+
                 String[] _tmp = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
                 foreach (string s in _tmp)
                 {
@@ -395,6 +356,7 @@ namespace LethalExpansion
                         SceneManager.MoveGameObjectToScene(obj, scene);
                     }
                 }
+
                 GameObject DropShip = GameObject.Find("ItemShipAnimContainer");
                 if (DropShip != null)
                 {
@@ -403,17 +365,20 @@ namespace LethalExpansion
                     {
                         ItemShip.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                     }
+
                     var ItemShipMusicClose = DropShip.transform.Find("ItemShip/Music");
                     if (ItemShipMusicClose != null)
                     {
                         ItemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                     }
+
                     var ItemShipMusicFar = DropShip.transform.Find("ItemShip/Music/Music (1)");
                     if (ItemShipMusicFar != null)
                     {
                         ItemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                     }
                 }
+
                 RuntimeDungeon runtimeDungeon = GameObject.FindObjectOfType<RuntimeDungeon>(false);
                 if (runtimeDungeon == null)
                 {
@@ -461,12 +426,14 @@ namespace LethalExpansion
         IEnumerator LoadCustomMoon(Scene scene)
         {
             yield return null;
-            if (Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab != null)
+
+            GameObject moonPrefab = Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab;
+            if (moonPrefab != null)
             {
-                if (Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab.transform != null)
+                if (moonPrefab.transform != null)
                 {
-                    CheckAndRemoveIllegalComponents(Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab.transform);
-                    GameObject mainPrefab = GameObject.Instantiate(Terminal_Patch.newMoons[StartOfRound.Instance.currentLevelID].MainPrefab);
+                    CheckAndRemoveIllegalComponents(moonPrefab.transform);
+                    GameObject mainPrefab = GameObject.Instantiate(moonPrefab);
                     currentWaterSurface = mainPrefab.transform.Find("Environment/Water");
                     if (mainPrefab != null)
                     {
@@ -476,6 +443,7 @@ namespace LethalExpansion
                         {
                             DiageticBackground.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                         }
+
                         Terrain[] Terrains = mainPrefab.GetComponentsInChildren<Terrain>();
                         if (Terrains != null && Terrains.Length > 0)
                         {
@@ -487,6 +455,7 @@ namespace LethalExpansion
                     }
                 }
             }
+
             String[] _tmp = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
             foreach (string s in _tmp)
             {
@@ -499,6 +468,7 @@ namespace LethalExpansion
                     SceneManager.MoveGameObjectToScene(obj, scene);
                 }
             }
+
             GameObject DropShip = GameObject.Find("ItemShipAnimContainer");
             if (DropShip != null)
             {
@@ -507,17 +477,20 @@ namespace LethalExpansion
                 {
                     ItemShip.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                 }
+
                 var ItemShipMusicClose = DropShip.transform.Find("ItemShip/Music");
                 if (ItemShipMusicClose != null)
                 {
                     ItemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                 }
+
                 var ItemShipMusicFar = DropShip.transform.Find("ItemShip/Music/Music (1)");
                 if (ItemShipMusicFar != null)
                 {
                     ItemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
                 }
             }
+
             RuntimeDungeon runtimeDungeon = GameObject.FindObjectOfType<RuntimeDungeon>(false);
             if (runtimeDungeon == null)
             {
@@ -561,6 +534,7 @@ namespace LethalExpansion
             rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
             SceneManager.MoveGameObjectToScene(OutOfBounds, scene);
         }
+
         private List<Type> whitelist = new List<Type> {
             //Base
             typeof(Transform),
@@ -683,25 +657,30 @@ namespace LethalExpansion
                 LethalExpansion.Log.LogError(ex.Message);
             }
         }
+
         private void OnSceneUnloaded(Scene scene)
         {
-            if(scene.name.Length > 0)
+            if (scene.name.Length > 0)
             {
                 Logger.LogInfo("Unloading scene: " + scene.name);
             }
+
             if (scene.name.StartsWith("Level") || scene.name == "CompanyBuilding" || (scene.name == "InitSceneLaunchOptions" && isInGame))
             {
-                if(SpaceLight != null)
+                if (SpaceLight != null)
                 {
                     SpaceLight.SetActive(true);
                 }
-                if(currentWaterSurface != null)
+
+                if (currentWaterSurface != null)
                 {
                     currentWaterSurface = null;
                 }
+
                 Terminal_Patch.ResetFireExitAmounts();
             }
         }
+
         private async Task waitForSession()
         {
             while (sessionWaiting)
@@ -713,7 +692,7 @@ namespace LethalExpansion
             {
                 while (!sessionWaiting && hostDataWaiting)
                 {
-                    NetworkPacketManager.Instance.sendPacket(NetworkPacketManager.packetType.request, "hostconfig", string.Empty, 0);
+                    NetworkPacketManager.Instance.SendPacket(NetworkPacketManager.PacketType.Request, "hostconfig", string.Empty, 0);
                     await Task.Delay(3000);
                 }
             }
@@ -728,28 +707,13 @@ namespace LethalExpansion
                 }
             }
 
-            TimeOfDay.Instance.globalTimeSpeedMultiplier = ConfigManager.Instance.FindItemValue<float>("GlobalTimeSpeedMultiplier");
-            TimeOfDay.Instance.lengthOfHours = ConfigManager.Instance.FindItemValue<int>("LengthOfHours");
-            TimeOfDay.Instance.numberOfHours = ConfigManager.Instance.FindItemValue<int>("NumberOfHours");
-            if(!ConfigManager.Instance.FindItemValue<bool>("BrutalCompanyPlusCompatibility") || !loadedPlugins.Any(p => p.Metadata.GUID == "BrutalCompanyPlus"))
-            {
-                TimeOfDay.Instance.quotaVariables.deadlineDaysAmount = ConfigManager.Instance.FindItemValue<int>("DeadlineDaysAmount");
-                TimeOfDay.Instance.quotaVariables.startingQuota = ConfigManager.Instance.FindItemValue<int>("StartingQuota");
-                TimeOfDay.Instance.quotaVariables.startingCredits = ConfigManager.Instance.FindItemValue<int>("StartingCredits");
-                TimeOfDay.Instance.quotaVariables.baseIncrease = ConfigManager.Instance.FindItemValue<int>("QuotaBaseIncrease");
-                TimeOfDay.Instance.quotaVariables.increaseSteepness = ConfigManager.Instance.FindItemValue<int>("QuotaIncreaseSteepness");
-            }
-            RoundManager.Instance.scrapAmountMultiplier = ConfigManager.Instance.FindItemValue<float>("ScrapAmountMultiplier");
-            RoundManager.Instance.scrapValueMultiplier = ConfigManager.Instance.FindItemValue<float>("ScrapValueMultiplier");
-            RoundManager.Instance.mapSizeMultiplier = ConfigManager.Instance.FindItemValue<float>("MapSizeMultiplier");
-            StartOfRound.Instance.maxShipItemCapacity = ConfigManager.Instance.FindItemValue<int>("MaxItemsInShip");
-
             if (!alreadypatched)
             {
                 Terminal_Patch.MainPatch(GameObject.Find("TerminalScript").GetComponent<Terminal>());
                 alreadypatched = true;
             }
         }
+
         private void ConfigSettingChanged(object sender, EventArgs e)
         {
             SettingChangedEventArgs settingChangedEventArgs = e as SettingChangedEventArgs;
@@ -758,6 +722,7 @@ namespace LethalExpansion
             {
                 return;
             }
+
             Log.LogInfo(string.Format("{0} Changed to {1}", settingChangedEventArgs.ChangedSetting.Definition.Key, settingChangedEventArgs.ChangedSetting.BoxedValue));
         }
     }

@@ -20,31 +20,37 @@ namespace LethalExpansion.Utils
                 {
                     _instance = new NetworkPacketManager();
                 }
+
                 return _instance;
             }
         }
-        public void sendPacket(packetType type, string header, string packet, long destination = -1, bool waitForAnswer = true)
+
+        public void SendPacket(PacketType type, string header, string packet, long destination = -1, bool waitForAnswer = true)
         {
             HUDManager.Instance.AddTextToChatOnServer($"[sync]{(int)type}|{RoundManager.Instance.NetworkManager.LocalClientId}>{destination}|{header}={packet}[sync]");
-            if (waitForAnswer && RoundManager.Instance.NetworkManager.IsHost && ConfigManager.Instance.FindItemValue<bool>("LoadModules") || ConfigManager.Instance.FindItemValue<bool>("KickPlayerWithoutMod"))
+            if (waitForAnswer && RoundManager.Instance.NetworkManager.IsHost && ConfigManager.Instance.FindItemValue<bool>("LoadModules"))
             {
                 StartTimeout(destination);
             }
         }
-        public void sendPacket(packetType type, string header, string packet, long[] destinations, bool waitForAnswer = true)
+
+        public void SendPacket(PacketType type, string header, string packet, long[] destinations, bool waitForAnswer = true)
         {
             foreach (int destination in destinations)
             {
-                if(destination != -1)
+                if (destination == -1)
                 {
-                    HUDManager.Instance.AddTextToChatOnServer($"[sync]{(int)type}|{RoundManager.Instance.NetworkManager.LocalClientId}>{destination}|{header}={packet}[sync]");
-                    if (waitForAnswer && RoundManager.Instance.NetworkManager.IsHost && ConfigManager.Instance.FindItemValue<bool>("LoadModules") || ConfigManager.Instance.FindItemValue<bool>("KickPlayerWithoutMod"))
-                    {
-                        StartTimeout(destination);
-                    }
+                    continue;
+                }
+
+                HUDManager.Instance.AddTextToChatOnServer($"[sync]{(int)type}|{RoundManager.Instance.NetworkManager.LocalClientId}>{destination}|{header}={packet}[sync]");
+                if (waitForAnswer && RoundManager.Instance.NetworkManager.IsHost && ConfigManager.Instance.FindItemValue<bool>("LoadModules"))
+                {
+                    StartTimeout(destination);
                 }
             }
         }
+
         private ConcurrentDictionary<long, CancellationTokenSource> timeoutDictionary = new ConcurrentDictionary<long, CancellationTokenSource>();
 
         public void StartTimeout(long id)
@@ -88,11 +94,12 @@ namespace LethalExpansion.Utils
                 StartOfRound.Instance.KickPlayer(StartOfRound.Instance.ClientPlayerList[(ulong)id]);*/
             }
         }
-        public enum packetType
+
+        public enum PacketType
         {
-            request = 0,
-            data = 1,
-            other = -1
+            Request = 0,
+            Data = 1,
+            Other = -1
         }
     }
 }

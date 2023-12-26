@@ -15,7 +15,6 @@ public class ConfigItem
     public bool Optional { get; set; }
     public bool RequireRestart { get; set; }
 
-
     public ConfigItem(string key, object defaultValue, string tab, string description, object minValue = null, object maxValue = null, bool sync = true, bool optional = false, bool hidden = false, bool requireRestart = false)
     {
         Key = key;

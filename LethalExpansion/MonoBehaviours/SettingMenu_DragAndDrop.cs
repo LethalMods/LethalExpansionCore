@@ -32,10 +32,10 @@ namespace LethalExpansion.Utils.HUD
 
         public void OnDrag(PointerEventData eventData)
         {
-            if(eventData != null && rectTransform != null)
+            if (eventData != null && rectTransform != null)
             {
                 rectTransform.anchoredPosition = ClampToWindow(rectTransform.anchoredPosition + eventData.delta / canvas.scaleFactor);
-                if(onDragEvent != null)
+                if (onDragEvent != null)
                 {
                     onDragEvent.Invoke();
                 }

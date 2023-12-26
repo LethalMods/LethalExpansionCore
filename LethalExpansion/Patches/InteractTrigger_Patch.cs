@@ -19,26 +19,32 @@ namespace LethalExpansion.Patches
             __instance.gameObject.AddComponent<InteractTrigger_Extension>();
         }
     }
+
     public class InteractTrigger_Extension : MonoBehaviour
     {
         private InteractTrigger trigger;
+        
         private void Awake()
         {
             trigger = this.GetComponent<InteractTrigger>();
         }
+
         private void OnTriggerExit(Collider other)
         {
-            if (trigger != null)
+            if (trigger == null)
             {
-                if (!trigger.touchTrigger)
-                {
-                    return;
-                }
-                PlayerControllerB player = other.gameObject.GetComponent<PlayerControllerB>();
-                if (other.gameObject.CompareTag("Player") && player != null && player.IsOwner)
-                {
-                    trigger.onStopInteract.Invoke(player);
-                }
+                return;
+            }
+
+            if (!trigger.touchTrigger)
+            {
+                return;
+            }
+
+            PlayerControllerB player = other.gameObject.GetComponent<PlayerControllerB>();
+            if (other.gameObject.CompareTag("Player") && player != null && player.IsOwner)
+            {
+                trigger.onStopInteract.Invoke(player);
             }
         }
     }

@@ -28,7 +28,7 @@ namespace LethalExpansion.Patches
         [HarmonyPostfix]
         public static void Awake_Postfix(MenuManager __instance)
         {
-            if(__instance.versionNumberText != null)
+            if (__instance.versionNumberText != null)
             {
                 __instance.versionNumberText.enableWordWrapping = false;
                 __instance.versionNumberText.text += $"     LEv{LethalExpansion.ModVersion.ToString()}";
