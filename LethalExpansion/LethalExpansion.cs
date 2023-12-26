@@ -211,11 +211,9 @@ namespace LethalExpansion
 
                 AssetGather.Instance.AddAudioMixer(GameObject.Find("Canvas/MenuManager").GetComponent<AudioSource>().outputAudioMixerGroup.audioMixer);
 
-                //VersionChecker.CheckVersion().GetAwaiter();
-
                 if (lastKickReason != null && lastKickReason.Length > 0)
                 {
-                    PopupManager.Instance.InstantiatePopup(scene, "Kicked from Lobby", $"You have been kicked\r\nReason: {lastKickReason}", button2: "Ignore");
+                    Console.WriteLine($"You have been kicked\r\nReason: {lastKickReason}");
                 }
             }
 
