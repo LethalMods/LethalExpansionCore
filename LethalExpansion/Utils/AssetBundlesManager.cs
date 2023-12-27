@@ -30,7 +30,8 @@ namespace LethalExpansion.Utils
         public readonly string[] forcedNative = new string[]
         {
             "templatemod",
-            "oldseaport"
+            "oldseaport",
+            "christmasvillage"
         };
 
         public (AssetBundle, ModManifest) Load(string name)
@@ -78,6 +79,15 @@ namespace LethalExpansion.Utils
             {
                 LethalExpansion.Log.LogWarning($"Illegal use of reserved Asset Bundle name: {Path.GetFileNameWithoutExtension(file)} at: {file}.");
                 return;
+            }
+
+            if (forcedNative.Contains(Path.GetFileNameWithoutExtension(file)) && file.Contains(modDirectory.FullName))
+            {
+                if (!LethalExpansion.LoadDefaultBundles.Value)
+                {
+                    LethalExpansion.Log.LogInfo($"Skipping default bundle: {Path.GetFileNameWithoutExtension(file)}");
+                    return;
+                }
             }
 
             if (Path.GetFileName(file) == "lethalexpansion.lem")
@@ -191,6 +201,72 @@ namespace LethalExpansion.Utils
             }
 
             return false;
+        }
+
+        public bool IsScrapCompatible(Scrap newScrap)
+        {
+            if (newScrap == null || newScrap.prefab == null)
+            {
+                return false;
+            }
+
+            if (!LethalExpansion.IgnoreRequiredBundles.Value)
+            {
+                if (newScrap.RequiredBundles != null)
+                {
+                    List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newScrap.RequiredBundles).ToList();
+                    if (missingBundles.Count > 0)
+                    {
+                        LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' can't be added, missing bundles: {string.Join(", ", missingBundles)}");
+                        return false;
+                    }
+                }
+            }
+
+            if (newScrap.IncompatibleBundles != null)
+            {
+                List<string> incompatibleBundles = AssetBundlesManager.Instance.GetLoadedBundles(newScrap.IncompatibleBundles).ToList();
+                if (incompatibleBundles.Count > 0)
+                {
+                    LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' can't be added, incompatible bundles: {string.Join(", ", incompatibleBundles)}");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        public bool IsMoonCompatible(Moon newMoon)
+        {
+            if (newMoon == null || !newMoon.IsEnabled)
+            {
+                return false;
+            }
+
+            if (!LethalExpansion.IgnoreRequiredBundles.Value)
+            {
+                if (newMoon.RequiredBundles != null)
+                {
+                    List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newMoon.RequiredBundles).ToList();
+                    if (missingBundles.Count > 0)
+                    {
+                        LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' can't be added, missing bundles: {string.Join(", ", missingBundles)}");
+                        return false;
+                    }
+                }
+            }
+
+            if (newMoon.IncompatibleBundles != null)
+            {
+                List<string> incompatibleBundles = AssetBundlesManager.Instance.GetLoadedBundles(newMoon.IncompatibleBundles).ToList();
+                if (incompatibleBundles.Count > 0)
+                {
+                    LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' can't be added, incompatible bundles: {string.Join(", ", incompatibleBundles)}");
+                    return false;
+                }
+            }
+
+            return true;
         }
     }
 }

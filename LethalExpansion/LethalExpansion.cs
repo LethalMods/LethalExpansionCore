@@ -1,5 +1,6 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using BepInEx.Configuration;
 using HarmonyLib;
 using LethalExpansion.Patches;
 using LethalExpansion.Utils;
@@ -24,13 +25,18 @@ namespace LethalExpansion
     [BepInDependency("MoonOfTheDay", BepInDependency.DependencyFlags.SoftDependency)]
     public class LethalExpansion : BaseUnityPlugin
     {
-        private const string PluginGUID = "LethalExpansion";
-        private const string PluginName = "LethalExpansion";
+        private const string PluginGUID = "LethalExpansionCore";
+        private const string PluginName = "LethalExpansionCore";
         private const string VersionString = "1.3.5";
         public static readonly Version ModVersion = new Version(VersionString);
 
+        public static ConfigEntry<bool> LoadDefaultBundles;
+        // Both Orion and Aquatis "require" templatemod (seemingly they reference scrap added by it)
+        // but it loads and play just fine without it
+        public static ConfigEntry<bool> IgnoreRequiredBundles;
+
         public static bool sessionWaiting = true;
-        public static bool alreadypatched = false;
+        public static bool alreadyPatched = false;
         public static bool isInGame = false;
 
         public static int delayedLevelChange = -1;
@@ -48,6 +54,9 @@ namespace LethalExpansion
         {
             Log = Logger;
             Logger.LogInfo($"PluginName: {PluginName}, VersionString: {VersionString} is loading...");
+
+            LoadDefaultBundles = Config.Bind<bool>("Core", "LoadDefaultBundles", false, "Whether or not to load the default bundles (templatemod, oldseaport, christmasvillage)");
+            IgnoreRequiredBundles = Config.Bind<bool>("Core", "IgnoreRequiredBundles", true, "Whether or not to allow a bundle to load without its required bundles");
 
             AssetBundlesManager.Instance.LoadAllAssetBundles();
 
@@ -139,7 +148,7 @@ namespace LethalExpansion
         void OnMainMenuLoaded(Scene scene)
         {
             sessionWaiting = true;
-            alreadypatched = false;
+            alreadyPatched = false;
 
             LethalExpansion.delayedLevelChange = -1;
 
@@ -337,10 +346,10 @@ namespace LethalExpansion
                 await Task.Delay(1000);
             }
 
-            if (!alreadypatched)
+            if (!alreadyPatched)
             {
                 Terminal_Patch.MainPatch(GameObject.Find("TerminalScript").GetComponent<Terminal>());
-                alreadypatched = true;
+                alreadyPatched = true;
             }
         }
     }

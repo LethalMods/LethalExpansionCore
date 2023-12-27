@@ -157,17 +157,7 @@ namespace LethalExpansion.Patches
 
                 foreach (var newScrap in manifest.scraps)
                 {
-                    if (newScrap == null || newScrap.prefab == null)
-                    {
-                        continue;
-                    }
-
-                    if (newScrap.RequiredBundles != null && !AssetBundlesManager.Instance.BundlesLoaded(newScrap.RequiredBundles))
-                    {
-                        continue;
-                    }
-
-                    if (newScrap.IncompatibleBundles != null && AssetBundlesManager.Instance.IncompatibleBundlesLoaded(newScrap.IncompatibleBundles))
+                    if (!AssetBundlesManager.Instance.IsScrapCompatible(newScrap))
                     {
                         continue;
                     }
@@ -273,39 +263,19 @@ namespace LethalExpansion.Patches
 
                 foreach (Moon newMoon in manifest.moons)
                 {
-                    if (newMoon == null || !newMoon.IsEnabled)
+                    if (!AssetBundlesManager.Instance.IsMoonCompatible(newMoon))
                     {
                         continue;
                     }
 
                     if (newMoonsNames.Contains(newMoon.MoonName))
                     {
-                        LethalExpansion.Log.LogWarning(newMoon.MoonName + " Moon already added.");
+                        LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' has already been added.");
                         continue;
                     }
 
                     try
                     {
-                        if (newMoon.RequiredBundles != null)
-                        {
-                            List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newMoon.RequiredBundles).ToList();
-                            if (missingBundles.Count > 0)
-                            {
-                                LethalExpansion.Log.LogWarning($"{newMoon.MoonName} can't be added, missing bundles: {string.Join(", ", missingBundles)}");
-                                continue;
-                            }
-                        }
-
-                        if (newMoon.IncompatibleBundles != null)
-                        {
-                            List<string> incompatibleBundles = AssetBundlesManager.Instance.GetLoadedBundles(newMoon.IncompatibleBundles).ToList();
-                            if (incompatibleBundles.Count > 0)
-                            {
-                                LethalExpansion.Log.LogWarning($"{newMoon.MoonName} can't be added, incompatible bundles: {string.Join(", ", incompatibleBundles)}");
-                                continue;
-                            }
-                        }
-
                         TerminalKeyword confirmKeyword = __instance.terminalNodes.allKeywords.First(k => k.word == "confirm");
                         TerminalKeyword denyKeyword = __instance.terminalNodes.allKeywords.First(k => k.word == "deny");
                         TerminalNode cancelRouteNode = null;

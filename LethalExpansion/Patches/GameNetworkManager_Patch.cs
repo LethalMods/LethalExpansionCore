@@ -48,7 +48,7 @@ namespace LethalExpansion.Patches
 
                     foreach (var newScrap in manifest.scraps)
                     {
-                        if (!IsScrapCompatible(newScrap))
+                        if (!AssetBundlesManager.Instance.IsScrapCompatible(newScrap))
                         {
                             continue;
                         }
@@ -85,26 +85,6 @@ namespace LethalExpansion.Patches
             {
                 LethalExpansion.Log.LogError(ex.Message);
             }
-        }
-
-        private static bool IsScrapCompatible(Scrap newScrap)
-        {
-            if (newScrap == null || newScrap.prefab == null)
-            {
-                return false;
-            }
-
-            if (newScrap.RequiredBundles != null && !AssetBundlesManager.Instance.BundlesLoaded(newScrap.RequiredBundles))
-            {
-                return false;
-            }
-
-            if (newScrap.IncompatibleBundles != null && AssetBundlesManager.Instance.IncompatibleBundlesLoaded(newScrap.IncompatibleBundles))
-            {
-                return false;
-            }
-
-            return true;
         }
 
         private static void InitializeScrap(Scrap newScrap, Sprite scrapSprite)
