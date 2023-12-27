@@ -12,6 +12,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.SceneManagement;
+using UnityEngine.Audio;
 using DunGen;
 using DunGen.Adapters;
 using LethalSDK.Utils;
@@ -41,13 +42,13 @@ namespace LethalExpansion
 
         public static int delayedLevelChange = -1;
 
-        private static readonly Harmony Harmony = new Harmony(PluginGUID);
+        private static readonly Harmony harmony = new Harmony(PluginGUID);
         public static ManualLogSource Log = new ManualLogSource(PluginName);
 
         public static NetworkManager networkManager;
 
-        // TODO: What are these for?
-        public GameObject terrainfixer;
+        // TODO: What are these two for?
+        public GameObject terrainFixer;
         public static Transform currentWaterSurface;
 
         private void Awake()
@@ -63,31 +64,31 @@ namespace LethalExpansion
             SceneManager.sceneLoaded += OnSceneLoaded;
             SceneManager.sceneUnloaded += OnSceneUnloaded;
 
-            Harmony.PatchAll(typeof(GameNetworkManager_Patch));
-            Harmony.PatchAll(typeof(Terminal_Patch));
-            Harmony.PatchAll(typeof(MenuManager_Patch));
-            Harmony.PatchAll(typeof(RoundManager_Patch));
-            Harmony.PatchAll(typeof(StartOfRound_Patch));
-            Harmony.PatchAll(typeof(EntranceTeleport_Patch));
-            Harmony.PatchAll(typeof(AudioReverbTrigger_Patch));
-            Harmony.PatchAll(typeof(InteractTrigger_Patch));
-            Harmony.PatchAll(typeof(RuntimeDungeon));
-            Harmony harmony = new Harmony("LethalExpansion");
+            harmony.PatchAll(typeof(GameNetworkManager_Patch));
+            harmony.PatchAll(typeof(Terminal_Patch));
+            harmony.PatchAll(typeof(MenuManager_Patch));
+            harmony.PatchAll(typeof(RoundManager_Patch));
+            harmony.PatchAll(typeof(StartOfRound_Patch));
+            harmony.PatchAll(typeof(EntranceTeleport_Patch));
+            harmony.PatchAll(typeof(AudioReverbTrigger_Patch));
+            harmony.PatchAll(typeof(InteractTrigger_Patch));
+            harmony.PatchAll(typeof(RuntimeDungeon));
 
+            // TODO: What is this for?
             HDRenderPipelineAsset hdAsset = GraphicsSettings.currentRenderPipeline as HDRenderPipelineAsset;
             if (hdAsset != null)
             {
                 var clonedSettings = hdAsset.currentPlatformRenderPipelineSettings;
                 clonedSettings.supportWater = true;
                 hdAsset.currentPlatformRenderPipelineSettings = clonedSettings;
-                Logger.LogInfo("Water support applied to the HDRenderPipelineAsset.");
+                LethalExpansion.Log.LogInfo("Water support applied to the HDRenderPipelineAsset.");
             }
             else
             {
-                Logger.LogError("HDRenderPipelineAsset not found.");
+                LethalExpansion.Log.LogError("HDRenderPipelineAsset not found.");
             }
 
-            Logger.LogInfo($"PluginName: {PluginName}, VersionString: {VersionString} is loaded.");
+            LethalExpansion.Log.LogInfo($"PluginName: {PluginName}, VersionString: {VersionString} is loaded.");
         }
 
         private int width = 256;
@@ -118,7 +119,8 @@ namespace LethalExpansion
 
         private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
         {
-            Logger.LogInfo("Loading scene: " + scene.name);
+            LethalExpansion.Log.LogInfo($"Loading scene: {scene.name}");
+
             if (scene.name == "InitScene")
             {
                 networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
@@ -129,7 +131,7 @@ namespace LethalExpansion
             }
             else if (scene.name == "CompanyBuilding")
             {
-                terrainfixer.SetActive(false);
+                terrainFixer.SetActive(false);
             }
             else if (scene.name == "SampleSceneRelay")
             {
@@ -137,7 +139,7 @@ namespace LethalExpansion
             }
             else if (scene.name.StartsWith("Level"))
             {
-                terrainfixer.SetActive(false);
+                terrainFixer.SetActive(false);
             }
             else if (scene.name == "InitSceneLaunchOptions" && isInGame)
             {
@@ -159,6 +161,7 @@ namespace LethalExpansion
 
         void OnSampleSceneRelayLoaded(Scene scene)
         {
+            // TODO: What is this for?
             GameObject waterSurface = GameObject.Instantiate(GameObject.Find("Systems/GameSystems/TimeAndWeather/Flooding"));
             Destroy(waterSurface.GetComponent<FloodWeather>());
             waterSurface.name = "WaterSurface";
@@ -166,30 +169,28 @@ namespace LethalExpansion
             waterSurface.transform.Find("Water").GetComponent<MeshFilter>().sharedMesh = null;
             SpawnPrefab.Instance.waterSurface = waterSurface;
 
+            // Ship monitor auto scrolling for long texts
             StartOfRound.Instance.screenLevelDescription.gameObject.AddComponent<AutoScrollText>();
 
+            // TODO: What is this for?
             AssetGather.Instance.AddAudioMixer(GameObject.Find("Systems/Audios/DiageticBackground").GetComponent<AudioSource>().outputAudioMixerGroup.audioMixer);
 
-            terrainfixer = new GameObject();
-            terrainfixer.name = "terrainfixer";
-            terrainfixer.transform.position = new Vector3(0, -500, 0);
-            Terrain terrain = terrainfixer.AddComponent<Terrain>();
-            TerrainData terrainData = new TerrainData();
-            terrainData.heightmapResolution = width + 1;
-            terrainData.size = new Vector3(width, depth, height);
-            terrainData.SetHeights(0, 0, GenerateHeights());
-            terrain.terrainData = terrainData;
+            // TODO: What is this for?
+            SetupTerrainFixer();
 
             Terminal_Patch.ResetFireExitAmounts();
 
-            UnityEngine.Object[] array = Resources.FindObjectsOfTypeAll(typeof(Volume));
-
-            for (int i = 0; i < array.Length; i++)
+            // TODO: What is this for?
+            UnityEngine.Object[] volumes = Resources.FindObjectsOfTypeAll(typeof(Volume));
+            for (int i = 0; i < volumes.Length; i++)
             {
-                if ((array[i] as Volume).sharedProfile == null)
+                Volume volume = volumes[i] as Volume;
+                if (volume.sharedProfile != null)
                 {
-                    (array[i] as Volume).sharedProfile = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<VolumeProfile>("Assets/Mods/LethalExpansion/Sky and Fog Global Volume Profile.asset");
+                    continue;
                 }
+                
+                volume.sharedProfile = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<VolumeProfile>("Assets/Mods/LethalExpansion/Sky and Fog Global Volume Profile.asset");
             }
 
             WaitForSession().GetAwaiter();
@@ -197,9 +198,24 @@ namespace LethalExpansion
             isInGame = true;
         }
 
+        void SetupTerrainFixer()
+        {
+            terrainFixer = new GameObject();
+            terrainFixer.name = "terrainfixer";
+            terrainFixer.transform.position = new Vector3(0, -500, 0);
+
+            TerrainData terrainData = new TerrainData();
+            terrainData.heightmapResolution = width + 1;
+            terrainData.size = new Vector3(width, depth, height);
+            terrainData.SetHeights(0, 0, GenerateHeights());
+
+            Terrain terrain = terrainFixer.AddComponent<Terrain>();
+            terrain.terrainData = terrainData;
+        }
+
         void OnInitSceneLaunchOptionsLoaded(Scene scene)
         {
-            terrainfixer.SetActive(false);
+            terrainFixer.SetActive(false);
             foreach (GameObject obj in scene.GetRootGameObjects())
             {
                 obj.SetActive(false);
@@ -208,41 +224,47 @@ namespace LethalExpansion
             // StartCoroutine(LoadCustomMoon(scene));
             LoadCustomMoon(scene);
 
-            String[] _tmp = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
-            foreach (string s in _tmp)
+            String[] requiredObjectTags = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
+            foreach (string requiredObjectTag in requiredObjectTags)
             {
-                if (GameObject.FindGameObjectWithTag(s) == null || GameObject.FindGameObjectsWithTag(s).Any(o => o.scene.name != "InitSceneLaunchOptions"))
+                bool missingGameObject = GameObject.FindGameObjectWithTag(requiredObjectTag) == null || GameObject.FindGameObjectsWithTag(requiredObjectTag).Any(o => o.scene.name != "InitSceneLaunchOptions");
+                if (!missingGameObject)
                 {
-                    GameObject obj = new GameObject();
-                    obj.name = s;
-                    obj.tag = s;
-                    obj.transform.position = new Vector3(0, -200, 0);
-                    SceneManager.MoveGameObjectToScene(obj, scene);
+                    continue;
                 }
+
+                GameObject requiredObject = new GameObject();
+                requiredObject.name = requiredObjectTag;
+                requiredObject.tag = requiredObjectTag;
+                requiredObject.transform.position = new Vector3(0, -200, 0);
+
+                SceneManager.MoveGameObjectToScene(requiredObject, scene);
+                LethalExpansion.Log.LogInfo($"Added required object with tag: {requiredObjectTag}");
             }
 
             GameObject dropShip = GameObject.Find("ItemShipAnimContainer");
             if (dropShip != null)
             {
-                var itemShip = dropShip.transform.Find("ItemShip");
+                Transform itemShip = dropShip.transform.Find("ItemShip");
                 if (itemShip != null)
                 {
-                    itemShip.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+                    itemShip.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
                 }
 
-                var itemShipMusicClose = dropShip.transform.Find("ItemShip/Music");
+                Transform itemShipMusicClose = dropShip.transform.Find("ItemShip/Music");
                 if (itemShipMusicClose != null)
                 {
-                    itemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+                    itemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
                 }
 
-                var itemShipMusicFar = dropShip.transform.Find("ItemShip/Music/Music (1)");
+                Transform itemShipMusicFar = dropShip.transform.Find("ItemShip/Music/Music (1)");
                 if (itemShipMusicFar != null)
                 {
-                    itemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+                    itemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
                 }
             }
 
+            // TODO: What is this for?
             RuntimeDungeon runtimeDungeon = GameObject.FindObjectOfType<RuntimeDungeon>(false);
             if (runtimeDungeon == null)
             {
@@ -250,6 +272,7 @@ namespace LethalExpansion
                 dungeonGenerator.name = "DungeonGenerator";
                 dungeonGenerator.tag = "DungeonGenerator";
                 dungeonGenerator.transform.position = new Vector3(0, -200, 0);
+
                 runtimeDungeon = dungeonGenerator.AddComponent<RuntimeDungeon>();
                 runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
                 runtimeDungeon.Generator.LengthMultiplier = 0.8f;
@@ -257,9 +280,11 @@ namespace LethalExpansion
                 runtimeDungeon.GenerateOnStart = false;
                 runtimeDungeon.Root = dungeonGenerator;
                 runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
+
                 UnityNavMeshAdapter dungeonNavMesh = dungeonGenerator.AddComponent<UnityNavMeshAdapter>();
                 dungeonNavMesh.BakeMode = UnityNavMeshAdapter.RuntimeNavMeshBakeMode.FullDungeonBake;
-                dungeonNavMesh.LayerMask = 35072; // 256 + 2048 + 32768 = 35072
+                dungeonNavMesh.LayerMask = 35072; // 256 + 2048 + 32768 = 35072 (What does each of these correspond to?)
+
                 SceneManager.MoveGameObjectToScene(dungeonGenerator, scene);
             }
             else
@@ -270,21 +295,38 @@ namespace LethalExpansion
                 }
             }
 
-            runtimeDungeon.Generator.DungeonFlow.GlobalProps.First(p => p.ID == 1231).Count = new IntRange(RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite(), RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite());
+            // TODO: What is thie purpose of this?
+            // Is it to force an exact amount of fire exits? but why?
+            int fireExists = RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite();
+            runtimeDungeon.Generator.DungeonFlow.GlobalProps.First(p => p.ID == 1231).Count = new IntRange(fireExists, fireExists);
 
             GameObject outOfBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
             outOfBounds.name = "OutOfBounds";
             outOfBounds.layer = 13;
             outOfBounds.transform.position = new Vector3(0, -300, 0);
             outOfBounds.transform.localScale = new Vector3(1000, 5, 1000);
+
             BoxCollider boxCollider = outOfBounds.GetComponent<BoxCollider>();
             boxCollider.isTrigger = true;
+
             outOfBounds.AddComponent<OutOfBoundsTrigger>();
+
             Rigidbody rigidbody = outOfBounds.AddComponent<Rigidbody>();
             rigidbody.useGravity = false;
             rigidbody.isKinematic = true;
             rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
+
             SceneManager.MoveGameObjectToScene(outOfBounds, scene);
+        }
+
+        private AudioMixerGroup GetDiageticMasterAudioMixer()
+        {
+            if (!AssetGather.Instance.audioMixers.TryGetValue("Diagetic", out var tuple))
+            {
+                return null;
+            }
+
+            return tuple.Item2.First(a => a.name == "Master");
         }
 
         private void LoadCustomMoon(Scene scene)
@@ -305,10 +347,10 @@ namespace LethalExpansion
             currentWaterSurface = mainPrefab.transform.Find("Environment/Water");
             SceneManager.MoveGameObjectToScene(mainPrefab, scene);
 
-            var diageticBackground = mainPrefab.transform.Find("Systems/Audio/DiageticBackground");
+            Transform diageticBackground = mainPrefab.transform.Find("Systems/Audio/DiageticBackground");
             if (diageticBackground != null)
             {
-                diageticBackground.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+                diageticBackground.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
             }
 
             Terrain[] terrains = mainPrefab.GetComponentsInChildren<Terrain>();
@@ -325,16 +367,12 @@ namespace LethalExpansion
         {
             if (scene.name.Length > 0)
             {
-                Logger.LogInfo("Unloading scene: " + scene.name);
+                LethalExpansion.Log.LogInfo($"Unloading scene: {scene.name}");
             }
 
             if (scene.name.StartsWith("Level") || scene.name == "CompanyBuilding" || (scene.name == "InitSceneLaunchOptions" && isInGame))
             {
-                if (currentWaterSurface != null)
-                {
-                    currentWaterSurface = null;
-                }
-
+                currentWaterSurface = null;
                 Terminal_Patch.ResetFireExitAmounts();
             }
         }
