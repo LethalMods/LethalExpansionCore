@@ -27,13 +27,6 @@ namespace LethalExpansion.Utils
         public AssetBundle mainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("LethalExpansion.dll", "lethalexpansion.lem"));
         public Dictionary<String, (AssetBundle, ModManifest)> assetBundles = new Dictionary<String, (AssetBundle, ModManifest)>();
 
-        public readonly string[] forcedNative = new string[]
-        {
-            "templatemod",
-            "oldseaport",
-            "christmasvillage"
-        };
-
         public (AssetBundle, ModManifest) Load(string name)
         {
             return assetBundles[name.ToLower()];
@@ -75,21 +68,6 @@ namespace LethalExpansion.Utils
 
         public void LoadBundle(string file)
         {
-            if (forcedNative.Contains(Path.GetFileNameWithoutExtension(file)) && !file.Contains(modDirectory.FullName))
-            {
-                LethalExpansion.Log.LogWarning($"Illegal use of reserved Asset Bundle name: {Path.GetFileNameWithoutExtension(file)} at: {file}.");
-                return;
-            }
-
-            if (forcedNative.Contains(Path.GetFileNameWithoutExtension(file)) && file.Contains(modDirectory.FullName))
-            {
-                if (!LethalExpansion.LoadDefaultBundles.Value)
-                {
-                    LethalExpansion.Log.LogInfo($"Skipping default bundle: {Path.GetFileNameWithoutExtension(file)}");
-                    return;
-                }
-            }
-
             if (Path.GetFileName(file) == "lethalexpansion.lem")
             {
                 LethalExpansion.Log.LogWarning($"AssetBundle with same name already loaded: {Path.GetFileName(file)}");
@@ -210,15 +188,19 @@ namespace LethalExpansion.Utils
                 return false;
             }
 
-            if (!LethalExpansion.IgnoreRequiredBundles.Value)
+            if (newScrap.RequiredBundles != null)
             {
-                if (newScrap.RequiredBundles != null)
+                List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newScrap.RequiredBundles).ToList();
+                if (missingBundles.Count > 0)
                 {
-                    List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newScrap.RequiredBundles).ToList();
-                    if (missingBundles.Count > 0)
+                    if (!LethalExpansion.IgnoreRequiredBundles.Value)
                     {
-                        LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' can't be added, missing bundles: {string.Join(", ", missingBundles)}");
+                        LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
                         return false;
+                    }
+                    else
+                    {
+                        LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' may not work as intended, missing required bundles: {string.Join(", ", missingBundles)}");
                     }
                 }
             }
@@ -243,15 +225,20 @@ namespace LethalExpansion.Utils
                 return false;
             }
 
-            if (!LethalExpansion.IgnoreRequiredBundles.Value)
+
+            if (newMoon.RequiredBundles != null)
             {
-                if (newMoon.RequiredBundles != null)
+                List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newMoon.RequiredBundles).ToList();
+                if (missingBundles.Count > 0)
                 {
-                    List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newMoon.RequiredBundles).ToList();
-                    if (missingBundles.Count > 0)
+                    if (!LethalExpansion.IgnoreRequiredBundles.Value)
                     {
-                        LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' can't be added, missing bundles: {string.Join(", ", missingBundles)}");
+                        LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
                         return false;
+                    }
+                    else
+                    {
+                        LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' may not work as intended, missing required bundles: {string.Join(", ", missingBundles)}");
                     }
                 }
             }

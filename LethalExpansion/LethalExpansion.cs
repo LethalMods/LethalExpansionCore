@@ -31,7 +31,6 @@ namespace LethalExpansion
         private const string VersionString = "1.3.5";
         public static readonly Version ModVersion = new Version(VersionString);
 
-        public static ConfigEntry<bool> LoadDefaultBundles;
         // Both Orion and Aquatis "require" templatemod (seemingly they reference scrap added by it)
         // but it loads and play just fine without it
         public static ConfigEntry<bool> IgnoreRequiredBundles;
@@ -56,7 +55,6 @@ namespace LethalExpansion
             Log = Logger;
             Logger.LogInfo($"PluginName: {PluginName}, VersionString: {VersionString} is loading...");
 
-            LoadDefaultBundles = Config.Bind<bool>("Core", "LoadDefaultBundles", false, "Whether or not to load the default bundles (templatemod, oldseaport, christmasvillage)");
             IgnoreRequiredBundles = Config.Bind<bool>("Core", "IgnoreRequiredBundles", true, "Whether or not to allow a bundle to load without its required bundles");
 
             AssetBundlesManager.Instance.LoadAllAssetBundles();
