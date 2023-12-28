@@ -383,9 +383,6 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="lethalexpansion.lem" />
-    <None Include="Modules\christmasvillage.lem" />
-    <None Include="Modules\oldseaport.lem" />
-    <None Include="Modules\templatemod.lem" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
