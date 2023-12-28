@@ -15,7 +15,7 @@ The default modules from LethalExpansion are available in a separate package if 
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
 
 ## Changes
-* 1.3.5.1
+* 1.3.6
 	* Added "compatibility" with LethalExpansion, when both of the plugins are installed at the same time LethalExpansion will automatically be disabled unless the `UseOriginalLethalExpansion` setting is set to `true` in which case LethalExpansionCore will be disabled instead. This means you can now have both as dependencies without any issues!
 
 ## Credits
