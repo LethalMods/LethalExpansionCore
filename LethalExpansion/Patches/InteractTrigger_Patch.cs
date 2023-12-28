@@ -2,45 +2,44 @@
 using HarmonyLib;
 using UnityEngine;
 
-namespace LethalExpansion.Patches
+namespace LethalExpansionCore.Patches;
+
+[HarmonyPatch(typeof(InteractTrigger))]
+internal class InteractTrigger_Patch
 {
-    [HarmonyPatch(typeof(InteractTrigger))]
-    internal class InteractTrigger_Patch
+    [HarmonyPatch("Start")]
+    [HarmonyPostfix]
+    public static void Start_Postfix(AudioReverbTrigger __instance)
     {
-        [HarmonyPatch("Start")]
-        [HarmonyPostfix]
-        public static void Start_Postfix(AudioReverbTrigger __instance)
-        {
-            __instance.gameObject.AddComponent<InteractTrigger_Extension>();
-        }
+        __instance.gameObject.AddComponent<InteractTrigger_Extension>();
+    }
+}
+
+public class InteractTrigger_Extension : MonoBehaviour
+{
+    private InteractTrigger trigger;
+    
+    private void Awake()
+    {
+        trigger = this.GetComponent<InteractTrigger>();
     }
 
-    public class InteractTrigger_Extension : MonoBehaviour
+    private void OnTriggerExit(Collider other)
     {
-        private InteractTrigger trigger;
-        
-        private void Awake()
+        if (trigger == null)
         {
-            trigger = this.GetComponent<InteractTrigger>();
+            return;
         }
 
-        private void OnTriggerExit(Collider other)
+        if (!trigger.touchTrigger)
         {
-            if (trigger == null)
-            {
-                return;
-            }
+            return;
+        }
 
-            if (!trigger.touchTrigger)
-            {
-                return;
-            }
-
-            PlayerControllerB player = other.gameObject.GetComponent<PlayerControllerB>();
-            if (other.gameObject.CompareTag("Player") && player != null && player.IsOwner)
-            {
-                trigger.onStopInteract.Invoke(player);
-            }
+        PlayerControllerB player = other.gameObject.GetComponent<PlayerControllerB>();
+        if (other.gameObject.CompareTag("Player") && player != null && player.IsOwner)
+        {
+            trigger.onStopInteract.Invoke(player);
         }
     }
 }

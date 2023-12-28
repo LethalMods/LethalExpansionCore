@@ -8,13 +8,14 @@
     <ProjectGuid>{F80EB3FD-9563-4F80-9FC7-3FCCE1655C13}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>LethalExpansion</RootNamespace>
-    <AssemblyName>LethalExpansion</AssemblyName>
+    <RootNamespace>LethalExpansionCore</RootNamespace>
+    <AssemblyName>LethalExpansionCore</AssemblyName>
     <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -50,7 +51,7 @@
     </Reference>
     <Reference Include="LethalSDK, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\Build\LethalSDK.dll</HintPath>
+      <HintPath>..\Build\Core\LethalSDK.dll</HintPath>
     </Reference>
     <Reference Include="Mono.Cecil, Version=0.11.4.0, Culture=neutral, PublicKeyToken=50cebf1cceb9d05e, processorArchitecture=MSIL">
       <HintPath>..\packages\Mono.Cecil.0.11.4\lib\net40\Mono.Cecil.dll</HintPath>
@@ -70,9 +71,6 @@
     <Reference Include="MonoMod.Utils, Version=21.12.13.1, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\MonoMod.Utils.21.12.13.1\lib\net452\MonoMod.Utils.dll</HintPath>
     </Reference>
-    <Reference Include="MoreCompany">
-      <HintPath>C:\Users\Holog\AppData\Roaming\r2modmanPlus-local\LethalCompany\profiles\Default\BepInEx\plugins\notnotnotswipez-MoreCompany\MoreCompany.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -84,10 +82,6 @@
     <Reference Include="Unity.AI.Navigation, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.AI.Navigation.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.InputSystem, Version=1.7.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.InputSystem.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Multiplayer.Tools.Common">
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.Common.dll</HintPath>
@@ -116,18 +110,12 @@
     <Reference Include="Unity.Multiplayer.Tools.NetworkSolutionInterface">
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.NetworkSolutionInterface.dll</HintPath>
     </Reference>
-    <Reference Include="Unity.Multiplayer.Tools.Util">
-      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Multiplayer.Tools.Util.dll</HintPath>
-    </Reference>
     <Reference Include="Unity.Netcode.Components, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Netcode.Components.dll</HintPath>
     </Reference>
     <Reference Include="Unity.Netcode.Runtime, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.Netcode.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.RenderPipelines.Core.Editor">
-      <HintPath>..\..\..\Projects\Lethal Company ReverseEnginering\Library\ScriptAssemblies\Unity.RenderPipelines.Core.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.Core.Runtime, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -140,9 +128,6 @@
     <Reference Include="Unity.RenderPipelines.HighDefinition.Config.Runtime, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.RenderPipelines.HighDefinition.Config.Runtime.dll</HintPath>
-    </Reference>
-    <Reference Include="Unity.RenderPipelines.HighDefinition.Editor">
-      <HintPath>..\..\..\Projects\Lethal Company ReverseEnginering\Library\ScriptAssemblies\Unity.RenderPipelines.HighDefinition.Editor.dll</HintPath>
     </Reference>
     <Reference Include="Unity.RenderPipelines.HighDefinition.Runtime, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
@@ -157,209 +142,206 @@
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.TextMeshPro.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AccessibilityModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.AccessibilityModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AccessibilityModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.AIModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AndroidJNIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.AndroidJNIModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AndroidJNIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AnimationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.AnimationModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.AssetBundleModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.AudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.AudioModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.AudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClothModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ClothModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ClothModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClusterInputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ClusterInputModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ClusterInputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ClusterRendererModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ClusterRendererModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ClusterRendererModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ContentLoadModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ContentLoadModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ContentLoadModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CrashReportingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.CrashReportingModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.CrashReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.DirectorModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.DirectorModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.DirectorModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.DSPGraphModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.DSPGraphModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.DSPGraphModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GameCenterModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.GameCenterModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.GameCenterModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.GIModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.GIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.GridModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.GridModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.GridModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.HotReloadModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.HotReloadModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.HotReloadModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ImageConversionModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ImageConversionModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.IMGUIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputLegacyModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.InputLegacyModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.InputLegacyModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.InputModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.InputModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.InputModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.JSONSerializeModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.LocalizationModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.LocalizationModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.LocalizationModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ParticleSystemModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ParticleSystemModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PerformanceReportingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.PerformanceReportingModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.PerformanceReportingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.Physics2DModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.Physics2DModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.PhysicsModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.PhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ProfilerModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ProfilerModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ProfilerModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.PropertiesModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.PropertiesModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.PropertiesModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.RuntimeInitializeOnLoadManagerInitializerModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.ScreenCaptureModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.ScreenCaptureModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.ScreenCaptureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SharedInternalsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.SharedInternalsModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.SharedInternalsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpriteMaskModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.SpriteMaskModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.SpriteMaskModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SpriteShapeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.SpriteShapeModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.SpriteShapeModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.StreamingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.StreamingModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.StreamingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SubstanceModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.SubstanceModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.SubstanceModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.SubsystemsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.SubsystemsModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.SubsystemsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.TerrainModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TerrainModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TerrainPhysicsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.TerrainPhysicsModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TerrainPhysicsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextCoreFontEngineModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TextCoreFontEngineModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextCoreTextEngineModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TextCoreTextEngineModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TextRenderingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TilemapModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.TilemapModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TilemapModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.TLSModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.TLSModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.TLSModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UI.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIElementsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UIElementsModule.dll</HintPath>
-    </Reference>
-    <Reference Include="UnityEngine.UIElementsNativeModule">
-      <HintPath>..\..\..\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UIElementsNativeModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UIElementsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UIModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UIModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UmbraModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UmbraModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UmbraModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityAnalyticsCommonModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityAnalyticsCommonModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityAnalyticsModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityAnalyticsModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityAnalyticsModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityConnectModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityConnectModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityConnectModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityCurlModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityCurlModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityCurlModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityTestProtocolModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityTestProtocolModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityTestProtocolModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAssetBundleModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestAssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestAudioModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestAudioModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityWebRequestModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestTextureModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestTextureModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.UnityWebRequestWWWModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.UnityWebRequestWWWModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VehiclesModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.VehiclesModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.VehiclesModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VFXModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.VFXModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.VFXModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VideoModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.VideoModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.VideoModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VirtualTexturingModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.VirtualTexturingModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.VirtualTexturingModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.VRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.VRModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.VRModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.WindModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.WindModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.WindModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.XRModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\UnityEngine.Modules.2022.3.9\lib\net45\UnityEngine.XRModule.dll</HintPath>
+      <HintPath>J:\Steam Games\steamapps\common\Lethal Company\Lethal Company_Data\Managed\UnityEngine.XRModule.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -392,11 +374,8 @@
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>mkdir "C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\BepInEx\plugins\$(TargetName)"
-xcopy /q/y/i "$(TargetPath)" "D:\Users\Holog\Documents\GitHub\LethalExpansion\Build" /E /H /C
-xcopy /q/y/i ".\lethalexpansion.lem" "D:\Users\Holog\Documents\GitHub\LethalExpansion\Build" /E /H /C
-xcopy /q/y/i ".\Modules\*" "D:\Users\Holog\Documents\GitHub\LethalExpansion\Build\Modules" /E /H /C
-xcopy /q/y/i "D:\Users\Holog\Documents\GitHub\LethalSDK\LethalSDK\bin\Debug\LethalSDK.dll" "D:\Users\Holog\Documents\GitHub\LethalExpansion\Build" /E /H /C</PostBuildEvent>
+    <PostBuildEvent>
+    </PostBuildEvent>
   </PropertyGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>

@@ -1,6 +1,6 @@
 {
   "name": "LethalExpansionCore",
-  "version_number": "1.3.5",
+  "version_number": "1.3.5.1",
   "website_url": "https://github.com/LethalMods/LethalExpansionCore",
   "description": "De-bloated LethalExpansion fork with only the LethalSDK module support",
   "dependencies": [
