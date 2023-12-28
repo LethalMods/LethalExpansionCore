@@ -3,6 +3,9 @@ This is a heavily de-bloated fork of [LethalExpansion](https://github.com/Hologr
 
 \*There may still be some parts which are not required but the vast majority has been removed (I just haven't figured out what everything does yet)
 
+The default modules from LethalExpansion are available in a separate package if you want or need them!
+https://thunderstore.io/c/lethal-company/p/jockie/LethalExpansionCoreModules
+
 ## Features
 - Support to load modules made with [LethalSDK](https://github.com/HolographicWings/LethalSDK-Unity-Project) to add new scraps and moons.
 
