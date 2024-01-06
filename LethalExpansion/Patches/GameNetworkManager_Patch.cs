@@ -5,6 +5,7 @@ using UnityEngine;
 using System.Collections.Generic;
 using LethalExpansionCore.Utils;
 using LethalSDK.ScriptableObjects;
+using LethalSDK.Utils;
 
 namespace LethalExpansionCore.Patches;
 
@@ -18,14 +19,17 @@ internal class GameNetworkManager_Patch
         AssetBank mainBank = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<ModManifest>("Assets/Mods/LethalExpansion/modmanifest.asset").assetBank;
         if (mainBank != null)
         {
-            foreach (var networkprefab in mainBank.NetworkPrefabs())
+            foreach (PrefabInfoPair networkPrefab in mainBank.NetworkPrefabs())
             {
-                if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
+                string prefabPath = networkPrefab.PrefabPath;
+                if (string.IsNullOrEmpty(prefabPath))
                 {
-                    GameObject prefab = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>(networkprefab.PrefabPath);
-                    __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
-                    LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
+                    continue;
                 }
+
+                GameObject prefab = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>(networkPrefab.PrefabPath);
+                __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
+                LethalExpansion.Log.LogInfo($"Registered prefab '{networkPrefab.PrefabName}'");
             }
         }
 
@@ -34,56 +38,81 @@ internal class GameNetworkManager_Patch
         {
             foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
             {
-                (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
+                (AssetBundle assetBundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 
-                if (bundle == null || manifest == null)
+                if (assetBundle == null || manifest == null)
                 {
                     continue;
                 }
 
-                if (manifest.scraps == null || manifest.scraps.Length == 0)
-                {
-                    continue;
-                }
-
-                foreach (var newScrap in manifest.scraps)
-                {
-                    if (!AssetBundlesManager.Instance.IsScrapCompatible(newScrap))
-                    {
-                        continue;
-                    }
-
-                    InitializeScrap(newScrap, scrapSprite);
-
-                    try
-                    {
-                        __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(newScrap.prefab);
-                        LethalExpansion.Log.LogInfo(newScrap.itemName + " Scrap registered.");
-                    }
-                    catch (Exception ex)
-                    {
-                        LethalExpansion.Log.LogError(ex.Message);
-                    }
-                }
-
-                if (manifest.assetBank != null && manifest.assetBank.NetworkPrefabs() != null && manifest.assetBank.NetworkPrefabs().Length > 0)
-                {
-                    foreach (var networkprefab in manifest.assetBank.NetworkPrefabs())
-                    {
-                        if (networkprefab.PrefabPath != null && networkprefab.PrefabPath.Length > 0)
-                        {
-                            GameObject prefab = bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath);
-                            ComponentWhitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(networkprefab.PrefabPath).transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
-                            __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
-                            LethalExpansion.Log.LogInfo($"{networkprefab.PrefabName} Prefab registered.");
-                        }
-                    }
-                }
+                LoadScrapPrefabs(__instance, assetBundle, manifest, scrapSprite);
+                LoadNetworkPrefabs(__instance, assetBundle, manifest);
             }
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to register AssetBundle prefabs. {ex.Message}");
+        }
+    }
+
+    private static void LoadScrapPrefabs(GameNetworkManager networkManager, AssetBundle assetBundle, ModManifest manifest, Sprite scrapSprite)
+    {
+        Scrap[] scraps = manifest.scraps;
+        if (scraps == null || scraps.Length == 0)
+        {
+            return;
+        }
+
+        NetworkPrefabHandler prefabHandler = networkManager.GetComponent<NetworkManager>().PrefabHandler;
+
+        foreach (Scrap scrap in manifest.scraps)
+        {
+            if (!AssetBundlesManager.Instance.IsScrapCompatible(scrap))
+            {
+                continue;
+            }
+
+            InitializeScrap(scrap, scrapSprite);
+
+            try
+            {
+                prefabHandler.AddNetworkPrefab(scrap.prefab);
+                LethalExpansion.Log.LogInfo($"Registered scrap '{scrap.itemName}'");
+            }
+            catch (Exception ex)
+            {
+                LethalExpansion.Log.LogError($"Failed to register scrap '{scrap.itemName}'. {ex.Message}");
+            }
+        }
+    }
+
+    private static void LoadNetworkPrefabs(GameNetworkManager networkManager, AssetBundle assetBundle, ModManifest manifest)
+    {
+        PrefabInfoPair[] networkPrefabs = manifest.assetBank?.NetworkPrefabs();
+        if (networkPrefabs == null || networkPrefabs.Length == 0)
+        {
+            return;
+        }
+
+        NetworkPrefabHandler prefabHandler = networkManager.GetComponent<NetworkManager>().PrefabHandler;
+
+        foreach (PrefabInfoPair networkPrefab in networkPrefabs)
+        {
+            string prefabPath = networkPrefab.PrefabPath;
+            if (string.IsNullOrEmpty(prefabPath))
+            {
+                continue;
+            }
+
+            GameObject prefab = assetBundle.LoadAsset<GameObject>(prefabPath);
+
+            // Is it necessary for it to be loaded again? I am going to guess no and hope it doesn't break anything
+            // ComponentWhitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(prefabPath).transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
+
+            ComponentWhitelist.CheckAndRemoveIllegalComponents(prefab.transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
+            prefabHandler.AddNetworkPrefab(prefab);
+
+            LethalExpansion.Log.LogInfo($"Registered prefab '{networkPrefab.PrefabName}'");
         }
     }
 

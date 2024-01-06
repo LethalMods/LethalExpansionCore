@@ -17,6 +17,7 @@ namespace LethalExpansionCore.Patches;
 internal class Terminal_Patch
 {
     private static TerminalKeyword[] defaultTerminalKeywords;
+
     public static bool scrapsPatched = false;
     public static bool moonsPatched = false;
     public static bool assetsGotten = false;
@@ -25,6 +26,7 @@ internal class Terminal_Patch
     public static List<int> fireExitAmounts = new List<int>();
 
     public static TerminalKeyword routeKeyword;
+    public static TerminalKeyword infoKeyword;
 
     public static List<string> newScrapsNames = new List<string>();
     public static List<string> newMoonsNames = new List<string>();
@@ -34,7 +36,9 @@ internal class Terminal_Patch
     {
         scrapsPatched = false;
         moonsPatched = false;
+
         routeKeyword = __instance.terminalNodes.allKeywords.First(k => k.word == "route");
+        infoKeyword = __instance.terminalNodes.allKeywords.First(k => k.word == "info");
 
         Hotfix_DoubleRoutes();
         GatherAssets();
@@ -46,6 +50,8 @@ internal class Terminal_Patch
 
         if (LethalExpansion.delayedLevelChange != -1)
         {
+            LethalExpansion.Log.LogInfo($"Delayed level change to level by id {LethalExpansion.delayedLevelChange}");
+
             StartOfRound.Instance.ChangeLevel(LethalExpansion.delayedLevelChange);
             StartOfRound.Instance.ChangePlanet();
         }
@@ -101,14 +107,14 @@ internal class Terminal_Patch
 
             try
             {
-                foreach (var a in manifest.assetBank.AudioClips())
+                foreach (AudioClipInfoPair audioClip in manifest.assetBank.AudioClips())
                 {
-                    AssetGather.Instance.AddAudioClip(a.AudioClipName, bundleKeyValue.Value.Item1.LoadAsset<AudioClip>(a.AudioClipPath));
+                    AssetGather.Instance.AddAudioClip(audioClip.AudioClipName, bundle.LoadAsset<AudioClip>(audioClip.AudioClipPath));
                 }
 
-                foreach (var p in manifest.assetBank.PlanetPrefabs())
+                foreach (PlanetPrefabInfoPair planetPrefab in manifest.assetBank.PlanetPrefabs())
                 {
-                    var prefab = bundleKeyValue.Value.Item1.LoadAsset<GameObject>(p.PlanetPrefabPath);
+                    GameObject prefab = bundle.LoadAsset<GameObject>(planetPrefab.PlanetPrefabPath);
                     if (prefab == null)
                     {
                         continue;
@@ -119,6 +125,7 @@ internal class Terminal_Patch
                     {
                         animator = prefab.AddComponent<Animator>();
                     }
+                    // heh?
                     animator = AssetGather.Instance.planetPrefabs.First().Value.GetComponent<Animator>();
 
                     AssetGather.Instance.AddPlanetPrefabs(prefab);
@@ -126,7 +133,7 @@ internal class Terminal_Patch
             }
             catch (Exception ex)
             {
-                LethalExpansion.Log.LogError(ex.Message);
+                LethalExpansion.Log.LogError($"Failed to collect AssetBundle prefabs. {ex.Message}");
             }
         }
 
@@ -170,7 +177,7 @@ internal class Terminal_Patch
 
                 if (newScrapsNames.Contains(newScrap.itemName))
                 {
-                    LethalExpansion.Log.LogWarning($"{newScrap.itemName} Scrap already added.");
+                    LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' has already been added");
                     continue;
                 }
 
@@ -229,18 +236,18 @@ internal class Terminal_Patch
                             }
                             catch (Exception ex)
                             {
-                                LethalExpansion.Log.LogError(ex.Message);
+                                LethalExpansion.Log.LogError($"Failed to add scrap '{newScrap.itemName}' spawn chance to moon '{level.PlanetName}'. {ex.Message}");
                             }
                         }
                     }
 
                     newScrapsNames.Add(item.itemName);
                     AssetGather.Instance.AddScrap(item);
-                    LethalExpansion.Log.LogInfo($"{newScrap.itemName} Scrap added.");
+                    LethalExpansion.Log.LogInfo($"Added scrap '{newScrap.itemName}'");
                 }
                 catch (Exception ex)
                 {
-                    LethalExpansion.Log.LogError(ex.Message);
+                    LethalExpansion.Log.LogError($"Failed to add scrap '{newScrap.itemName}'. {ex.Message}");
                 }
             }
         }
@@ -248,71 +255,48 @@ internal class Terminal_Patch
         scrapsPatched = true;
     }
 
-    public static T[] RemoveElementFromArray<T>(T[] originalArray, int indexToRemove)
-    {
-        if (indexToRemove < 0 || indexToRemove >= originalArray.Length)
-        {
-            throw new ArgumentOutOfRangeException(nameof(indexToRemove));
-        }
-
-        T[] newArray = new T[originalArray.Length - 1];
-        for (int i = 0, j = 0; i < originalArray.Length; i++)
-        {
-            if (i != indexToRemove)
-            {
-                newArray[j] = originalArray[i];
-                j++;
-            }
-        }
-
-        return newArray;
-    }
-
     public static void RemoveMoon(Terminal __instance, string moonName)
     {
+        if (moonName == null)
+        {
+            return;
+        }
+
+        int countEntries()
+        {
+            return __instance.moonsCatalogueList.Length +
+                routeKeyword.compatibleNouns.Length +
+                infoKeyword.compatibleNouns.Length;
+        }
+
         try
         {
-            if (moonName == null)
-            {
-                return;
-            }
+            int count = countEntries();
 
-            CompatibleNoun[] nouns = routeKeyword.compatibleNouns;
-            if (!__instance.moonsCatalogueList.Any(level => level.name.Contains(moonName)) && !nouns.Any(level => level.noun.name.Contains(moonName)))
-            {
-                LethalExpansion.Log.LogInfo($"{moonName} moon not exist.");
-                return;
-            }
+            __instance.moonsCatalogueList = __instance.moonsCatalogueList
+                .Where(moon => !moon.name.Contains(moonName))
+                .ToArray();
 
-            for (int i = 0; i < __instance.moonsCatalogueList.Length; i++)
-            {
-                if (__instance.moonsCatalogueList[i].name.Contains(moonName))
-                {
-                    __instance.moonsCatalogueList = RemoveElementFromArray(__instance.moonsCatalogueList, i);
-                }
-            }
+            routeKeyword.compatibleNouns = routeKeyword.compatibleNouns
+                .Where(noun => !noun.noun.name.Contains(moonName))
+                .ToArray();
 
-            for (int i = 0; i < nouns.Length; i++)
-            {
-                if (nouns[i].noun.name.Contains(moonName))
-                {
-                    routeKeyword.compatibleNouns = RemoveElementFromArray(nouns, i);
-                }
-            }
+            infoKeyword.compatibleNouns = infoKeyword.compatibleNouns
+                .Where(noun => !noun.noun.name.Contains(moonName))
+                .ToArray();
 
-            if (!__instance.moonsCatalogueList.Any(level => level.name.Contains(moonName)) &&
-                !routeKeyword.compatibleNouns.Any(level => level.noun.name.Contains(moonName)))
+            if (count - countEntries() != 0)
             {
-                LethalExpansion.Log.LogInfo($"{moonName} moon removed.");
+                LethalExpansion.Log.LogInfo($"Removed moon '{moonName}'");
             }
             else
             {
-                LethalExpansion.Log.LogInfo($"{moonName} moon failed to remove.");
+                LethalExpansion.Log.LogInfo($"Moon '{moonName}' does not exist");
             }
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to remove moon '{moonName}'. {ex.Message}");
         }
     }
 
@@ -348,7 +332,7 @@ internal class Terminal_Patch
 
                 if (newMoonsNames.Contains(newMoon.MoonName))
                 {
-                    LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' has already been added.");
+                    LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' has already been added");
                     continue;
                 }
 
@@ -361,11 +345,11 @@ internal class Terminal_Patch
 
                     newMoons.Add(newLevel.levelID, newMoon);
 
-                    LethalExpansion.Log.LogInfo(newMoon.MoonName + " Moon added.");
+                    LethalExpansion.Log.LogInfo($"Added moon '{newMoon.MoonName}'");
                 }
                 catch (Exception ex)
                 {
-                    LethalExpansion.Log.LogError(ex.Message);
+                    LethalExpansion.Log.LogError($"Failed to add moon '{newMoon.MoonName}'. {ex.Message}");
                 }
             }
         }
@@ -382,7 +366,7 @@ internal class Terminal_Patch
         newLevel.sceneName = "InitSceneLaunchOptions";
         newLevel.levelID = StartOfRound.Instance.levels.Length;
 
-        if (newMoon.OrbitPrefabName != null && newMoon.OrbitPrefabName.Length > 0 && AssetGather.Instance.planetPrefabs.ContainsKey(newMoon.OrbitPrefabName))
+        if (!string.IsNullOrEmpty(newMoon.OrbitPrefabName) && AssetGather.Instance.planetPrefabs.ContainsKey(newMoon.OrbitPrefabName))
         {
             newLevel.planetPrefab = AssetGather.Instance.planetPrefabs[newMoon.OrbitPrefabName];
         }
@@ -394,7 +378,7 @@ internal class Terminal_Patch
         newLevel.lockedForDemo = true;
         newLevel.spawnEnemiesAndScrap = newMoon.SpawnEnemiesAndScrap;
 
-        if (newMoon.PlanetDescription != null && newMoon.PlanetDescription.Length > 0)
+        if (!string.IsNullOrWhiteSpace(newMoon.PlanetDescription))
         {
             newLevel.LevelDescription = newMoon.PlanetDescription;
         }
@@ -405,7 +389,7 @@ internal class Terminal_Patch
 
         newLevel.videoReel = newMoon.PlanetVideo;
 
-        if (newMoon.RiskLevel != null && newMoon.RiskLevel.Length > 0)
+        if (!string.IsNullOrEmpty(newMoon.RiskLevel))
         {
             newLevel.riskLevel = newMoon.RiskLevel;
         }
@@ -453,7 +437,7 @@ internal class Terminal_Patch
         newLevel.minScrap = newMoon.MinScrap;
         newLevel.maxScrap = newMoon.MaxScrap;
 
-        if (newMoon.LevelAmbienceClips != null && newMoon.LevelAmbienceClips.Length > 0 && AssetGather.Instance.levelAmbiances.ContainsKey(newMoon.LevelAmbienceClips))
+        if (!string.IsNullOrEmpty(newMoon.LevelAmbienceClips) && AssetGather.Instance.levelAmbiances.ContainsKey(newMoon.LevelAmbienceClips))
         {
             newLevel.levelAmbienceClips = AssetGather.Instance.levelAmbiances[newMoon.LevelAmbienceClips];
         }
@@ -559,8 +543,25 @@ internal class Terminal_Patch
             new CompatibleNoun(){ noun = confirmKeyword, result = moonRouteConfirm },
         };
 
-        CompatibleNoun moonNoun = new CompatibleNoun() { noun = moonKeyword, result = moonRoute };
-        routeKeyword.compatibleNouns = routeKeyword.compatibleNouns.AddItem(moonNoun).ToArray();
+        CompatibleNoun moonRouteNoun = new CompatibleNoun() { noun = moonKeyword, result = moonRoute };
+        routeKeyword.compatibleNouns = routeKeyword.compatibleNouns.AddItem(moonRouteNoun).ToArray();
+
+        TerminalNode moonInfo = ScriptableObject.CreateInstance<TerminalNode>();
+        moonInfo.name = newMoon.MoonName.ToLower() + "Info";
+        moonInfo.displayText = $"{newMoon.PlanetName}\r\n----------------------\r\n\r\n";
+        if (!string.IsNullOrWhiteSpace(newMoon.PlanetDescription))
+        {
+            moonInfo.displayText += $"{newMoon.PlanetDescription}\r\n";
+        }
+        else
+        {
+            moonInfo.displayText += "No info about this moon can be found.\r\n";
+        }
+        moonInfo.clearPreviousText = true;
+        moonInfo.maxCharactersToType = 35;
+
+        CompatibleNoun moonInfoNoun = new CompatibleNoun { noun = moonKeyword, result = moonInfo };
+        infoKeyword.compatibleNouns = infoKeyword.compatibleNouns.AddItem(moonInfoNoun).ToArray();
     }
 
     private static void Hotfix_DoubleRoutes()
@@ -593,7 +594,7 @@ internal class Terminal_Patch
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to remove duplicated route(s). {ex.Message}");
         }
     }
 
@@ -614,7 +615,7 @@ internal class Terminal_Patch
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to reset terminal keywords. {ex.Message}");
         }
     }
 
@@ -640,7 +641,7 @@ internal class Terminal_Patch
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to update moon catalogue {ex.Message}");
         }
     }
 
@@ -661,7 +662,7 @@ internal class Terminal_Patch
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to hide terminal text. {ex.Message}");
         }
 
         return inputText;
@@ -685,7 +686,7 @@ internal class Terminal_Patch
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to save fire exit amount. {ex.Message}");
         }
     }
 
@@ -705,7 +706,7 @@ internal class Terminal_Patch
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to reset fire exit amount. {ex.Message}");
         }
     }
 }

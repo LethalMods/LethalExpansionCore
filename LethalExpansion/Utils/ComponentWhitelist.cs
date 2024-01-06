@@ -183,8 +183,8 @@ public static class ComponentWhitelist
     {
         try
         {
-            var components = prefab.GetComponents<Component>();
-            foreach (var component in components)
+            Component[] components = prefab.GetComponents<Component>();
+            foreach (Component component in components)
             {
                 if (!whitelist.Any(whitelistType => component.GetType() == whitelistType))
                 {
@@ -200,7 +200,7 @@ public static class ComponentWhitelist
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError(ex.Message);
+            LethalExpansion.Log.LogError($"Failed to remove illegal components. {ex.Message}");
         }
     }
 }
