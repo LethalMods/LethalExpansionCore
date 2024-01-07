@@ -89,7 +89,7 @@ internal class Terminal_Patch
             level.DaytimeEnemies.ForEach(e => AssetGather.Instance.AddEnemies(e.enemyType));
         }
 
-        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
+        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 
@@ -147,7 +147,7 @@ internal class Terminal_Patch
 
         AudioClip defaultDropSound = AssetGather.Instance.audioClips["DropCan"];
         AudioClip defaultGrabSound = AssetGather.Instance.audioClips["ShovelPickUp"];
-        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
+        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 
@@ -161,7 +161,7 @@ internal class Terminal_Patch
                 continue;
             }
 
-            foreach (var newScrap in manifest.scraps)
+            foreach (Scrap newScrap in manifest.scraps)
             {
                 if (!AssetBundlesManager.Instance.IsScrapCompatible(newScrap))
                 {
@@ -302,7 +302,7 @@ internal class Terminal_Patch
             return;
         }
 
-        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
+        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 

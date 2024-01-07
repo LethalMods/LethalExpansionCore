@@ -345,16 +345,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Extenders\DungeonFlow_Extender.cs" />
     <Compile Include="MonoBehaviours\AutoScrollText.cs" />
+    <Compile Include="MonoBehaviours\InactiveNetworkPrefabInstancier.cs" />
+    <Compile Include="Netcode\InactiveNetworkPrefabInstanceHandler.cs" />
     <Compile Include="Patches\AudioReverbTrigger_Patch.cs" />
+    <Compile Include="Patches\DungeonGenerator_Patch.cs" />
     <Compile Include="Patches\EntranceTeleport_Patch.cs" />
     <Compile Include="Patches\GameNetworkManager_Patch.cs" />
     <Compile Include="LethalExpansion.cs" />
     <Compile Include="Patches\InteractTrigger_Patch.cs" />
     <Compile Include="Patches\MenuManager_Patch.cs" />
     <Compile Include="Patches\RoundManager_Patch.cs" />
-    <Compile Include="Extenders\SelectableLevel_Extender.cs" />
     <Compile Include="Patches\StartOfRound_Patch.cs" />
     <Compile Include="Patches\Terminal_Patch.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -26,6 +26,7 @@ public class AssetBundlesManager
 
     public AssetBundle mainAssetBundle = AssetBundle.LoadFromFile(Assembly.GetExecutingAssembly().Location.Replace("LethalExpansionCore.dll", "lethalexpansion.lem"));
     public Dictionary<String, (AssetBundle, ModManifest)> assetBundles = new Dictionary<String, (AssetBundle, ModManifest)>();
+    public Dictionary<String, (AssetBundle, ModManifest)> contentAssetBundles = new Dictionary<String, (AssetBundle, ModManifest)>();
 
     public (AssetBundle, ModManifest) Load(string name)
     {
@@ -68,25 +69,17 @@ public class AssetBundlesManager
 
     public void LoadBundle(string file)
     {
-        string bundleName = Path.GetFileName(file);
-        if (!LethalExpansion.LoadDefaultBundles.Value)
+        string bundleFileName = Path.GetFileName(file);
+        if (bundleFileName == "lethalexpansion.lem")
         {
-            if (LethalExpansion.LethalExpansionPath != null && Path.GetDirectoryName(file).StartsWith(LethalExpansion.LethalExpansionPath))
-            {
-                LethalExpansion.Log.LogWarning($"Skipping default AssetBundle: {bundleName}");
-                return;
-            }
-        }
-
-        if (bundleName == "lethalexpansion.lem")
-        {
-            LethalExpansion.Log.LogWarning($"AssetBundle with same name already loaded: {bundleName}");
+            LethalExpansion.Log.LogWarning($"An AssetBundle with the same name '{bundleFileName}' has already been loaded");
             return;
         }
 
-        if (assetBundles.ContainsKey(Path.GetFileNameWithoutExtension(file)))
+        string bundleName = Path.GetFileNameWithoutExtension(file).ToLower();
+        if (assetBundles.ContainsKey(bundleName))
         {
-            LethalExpansion.Log.LogWarning($"File is not an AssetBundle: {bundleName}");
+            LethalExpansion.Log.LogWarning($"File '{bundleFileName}' is not an AssetBundle");
             return;
         }
 
@@ -108,34 +101,45 @@ public class AssetBundlesManager
             return;
         }
 
-        string manifestPath = $"Assets/Mods/{Path.GetFileNameWithoutExtension(file)}/ModManifest.asset";
+        string manifestPath = $"Assets/Mods/{bundleName}/ModManifest.asset";
 
         ModManifest modManifest = loadedBundle.LoadAsset<ModManifest>(manifestPath);
         if (modManifest == null)
         {
-            LethalExpansion.Log.LogWarning($"AssetBundle have no ModManifest: {bundleName}");
+            LethalExpansion.Log.LogWarning($"AssetBundle '{bundleFileName}' does not have a ModManifest");
             loadedBundle.Unload(true);
-            LethalExpansion.Log.LogInfo($"AssetBundle unloaded: {bundleName}");
+            LethalExpansion.Log.LogInfo($"AssetBundle '{bundleFileName}' unloaded");
 
             return;
         }
 
         if (assetBundles.Any(b => b.Value.Item2.modName == modManifest.modName))
         {
-            LethalExpansion.Log.LogWarning($"Another mod with same name is already loaded: {modManifest.modName}");
+            LethalExpansion.Log.LogWarning($"Another mod with same name '{modManifest.modName}' is already loaded");
             loadedBundle.Unload(true);
-            LethalExpansion.Log.LogInfo($"AssetBundle unloaded: {bundleName}");
+            LethalExpansion.Log.LogInfo($"AssetBundle '{bundleFileName}' unloaded");
 
             return;
         }
 
-        LethalExpansion.Log.LogInfo($"Module found: {modManifest.modName} v{(modManifest.GetVersion() != null ? modManifest.GetVersion().ToString() : "0.0.0.0")} Loaded in {stopwatch.ElapsedMilliseconds}ms");
+        LethalExpansion.Log.LogInfo($"Module '{modManifest.modName}' v{modManifest?.GetVersion()?.ToString() ?? "0.0.0.0"} was loaded in {stopwatch.ElapsedMilliseconds}ms");
         if (modManifest.GetVersion() == null || modManifest.GetVersion().ToString() == "0.0.0.0")
         {
-            LethalExpansion.Log.LogWarning($"Module {modManifest.modName} have no version number, this is unsafe!");
+            LethalExpansion.Log.LogWarning($"Module '{modManifest.modName}' does not have a version number, this is unsafe!");
         }
 
-        assetBundles.Add(Path.GetFileNameWithoutExtension(file).ToLower(), (loadedBundle, modManifest));
+        assetBundles.Add(bundleName, (loadedBundle, modManifest));
+
+        if (!LethalExpansion.LoadDefaultBundles.Value)
+        {
+            if (LethalExpansion.LethalExpansionPath != null && Path.GetDirectoryName(file).StartsWith(LethalExpansion.LethalExpansionPath))
+            {
+                LethalExpansion.Log.LogWarning($"Ignorning content from default AssetBundle '{bundleFileName}'");
+                return;
+            }
+        }
+
+        contentAssetBundles.Add(bundleName, (loadedBundle, modManifest));
     }
 
     public bool BundleLoaded(string bundleName)
