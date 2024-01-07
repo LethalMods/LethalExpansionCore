@@ -18,6 +18,12 @@ The default modules from LethalExpansion are also available in a separate packag
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
 
 ## Changes
+* 1.3.7
+	* Fixed fire exits not working properly
+	* Fixed entrance desync which caused
+		* Mobs to ignore clients in the dungeon
+		* Lightning strikes inside the dungeon
+		* Probably a whole lot of other issues
 * 1.3.6
 	* Added "compatibility" with LethalExpansion, when both of the plugins are installed at the same time LethalExpansion will automatically be disabled unless the `UseOriginalLethalExpansion` setting is set to `true` in which case LethalExpansionCore will be disabled instead. This means you can now have both as dependencies without any issues!
 
