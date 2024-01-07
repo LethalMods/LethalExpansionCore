@@ -1,11 +1,14 @@
 ﻿using HarmonyLib;
 using System;
 using Unity.Netcode;
+using Unity.Netcode.Components;
 using UnityEngine;
 using System.Collections.Generic;
 using LethalExpansionCore.Utils;
 using LethalSDK.ScriptableObjects;
 using LethalSDK.Utils;
+using LethalExpansionCore.MonoBehaviours;
+using LethalExpansionCore.Netcode;
 
 namespace LethalExpansionCore.Patches;
 
@@ -47,6 +50,8 @@ internal class GameNetworkManager_Patch
 
                 LoadScrapPrefabs(__instance, assetBundle, manifest, scrapSprite);
                 LoadNetworkPrefabs(__instance, assetBundle, manifest);
+
+                LoadMoonPrefabs(__instance, assetBundle, manifest);
             }
         }
         catch (Exception ex)
@@ -167,6 +172,73 @@ internal class GameNetworkManager_Patch
             scanNode.headerText = newScrap.itemName;
             scanNode.subText = "Value: ";
             scanNode.nodeType = 2;
+        }
+    }
+
+    private static void LoadMoonPrefabs(GameNetworkManager networkManager, AssetBundle assetBundle, ModManifest manifest)
+    {
+        Moon[] moons = manifest.moons;
+        if (moons == null || moons.Length == 0)
+        {
+            return;
+        }
+
+        NetworkPrefabHandler prefabHandler = networkManager.GetComponent<NetworkManager>().PrefabHandler;
+
+        foreach (Moon moon in manifest.moons)
+        {
+            if (!AssetBundlesManager.Instance.IsMoonCompatible(moon))
+            {
+                continue;
+            }
+
+            if (moon.MainPrefab == null)
+            {
+                LethalExpansion.Log.LogWarning($"Moon '{moon.PlanetName}' does not have a MainPrefab");
+                continue;
+            }
+
+            try
+            {
+                foreach (NetworkObject networkObject in moon.MainPrefab.GetComponentsInChildren<NetworkObject>())
+                {
+                    LethalSDK.Component.SI_EntranceTeleport teleport = networkObject.GetComponent<LethalSDK.Component.SI_EntranceTeleport>();
+                    if (!teleport)
+                    {
+                        continue;
+                    }
+
+                    GameObject gameObject = networkObject.gameObject;
+                    // Sync BoxCollider bounds. For some reason it does not
+                    // have the proper bounds when it's instantiated on the
+                    // client which can sometimes cause the entrance to be
+                    // inaccessible (on Aquatis for instance).
+                    //
+                    // Syncing it with a NetworkTransform might be a bit hacky
+                    // but it will do until I can figure out the root cause of
+                    // the desync, though this entire solution feels a bit hacky
+                    // to be honest.
+                    gameObject.AddComponent<NetworkTransform>();
+                    gameObject.SetActive(false);
+
+                    GameObject parent = gameObject.transform.parent.gameObject;
+
+                    GameObject instancier = new GameObject("NetworkPrefabInstancier");
+                    instancier.transform.parent = parent.transform;
+                    instancier.transform.position = gameObject.transform.position;
+                    instancier.transform.rotation = gameObject.transform.rotation;
+
+                    instancier.AddComponent<LECore_InactiveNetworkPrefabInstancier>().prefab = gameObject;
+
+                    prefabHandler.AddHandler(gameObject, new InactiveNetworkPrefabInstanceHandler(gameObject));
+                }
+
+                LethalExpansion.Log.LogInfo($"Registered moon '{moon.MoonName}'");
+            }
+            catch (Exception ex)
+            {
+                LethalExpansion.Log.LogError($"Failed to register moon '{moon.MoonName}'. {ex}");
+            }
         }
     }
 }

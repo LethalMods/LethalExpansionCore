@@ -10,6 +10,7 @@ using UnityEngine.AI;
 using Unity.AI.Navigation;
 using UnityEngine.Video;
 using Unity.Netcode.Components;
+using LethalExpansionCore.MonoBehaviours;
 
 namespace LethalExpansionCore.Utils;
 
@@ -110,7 +111,9 @@ public static class ComponentWhitelist
         typeof(SI_DamagePlayer),
         typeof(SI_SoundYDistance),
         typeof(SI_AudioOutputInterface),
-        typeof(PlayerShip)
+        typeof(PlayerShip),
+        // LethalExpansionCore
+        typeof(LECore_InactiveNetworkPrefabInstancier)
     };
 
     public static List<Type> ScrapPrefabComponentWhitelist = new List<Type> {
@@ -188,7 +191,7 @@ public static class ComponentWhitelist
             {
                 if (!whitelist.Any(whitelistType => component.GetType() == whitelistType))
                 {
-                    LethalExpansion.Log.LogWarning($"Removed illegal {component.GetType().Name} component.");
+                    LethalExpansion.Log.LogWarning($"Removed illegal component '{component.GetType().Name}' from prefab '{prefab}'");
                     GameObject.Destroy(component);
                 }
             }
@@ -200,7 +203,7 @@ public static class ComponentWhitelist
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError($"Failed to remove illegal components. {ex.Message}");
+            LethalExpansion.Log.LogError($"Failed to remove illegal components from prefab '{prefab}'. {ex}");
         }
     }
 }
