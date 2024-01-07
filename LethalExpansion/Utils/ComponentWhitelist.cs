@@ -111,6 +111,7 @@ public static class ComponentWhitelist
         typeof(SI_DamagePlayer),
         typeof(SI_SoundYDistance),
         typeof(SI_AudioOutputInterface),
+        typeof(SI_NetworkDataInterfacing),
         typeof(PlayerShip),
         // LethalExpansionCore
         typeof(LECore_InactiveNetworkPrefabInstancier)
