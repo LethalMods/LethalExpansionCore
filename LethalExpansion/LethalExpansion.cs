@@ -141,6 +141,8 @@ public class LethalExpansion : BaseUnityPlugin
         harmony.PatchAll(typeof(EntranceTeleport_Patch));
         harmony.PatchAll(typeof(AudioReverbTrigger_Patch));
         harmony.PatchAll(typeof(InteractTrigger_Patch));
+        harmony.PatchAll(typeof(DungeonGenerator_Patch));
+        // heh?
         harmony.PatchAll(typeof(RuntimeDungeon));
 
         // TODO: What is this for?
@@ -188,7 +190,7 @@ public class LethalExpansion : BaseUnityPlugin
 
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        LethalExpansion.Log.LogInfo($"Loading scene: {scene.name}");
+        LethalExpansion.Log.LogInfo($"Loading scene '{scene.name}'");
 
         if (scene.name == "InitScene")
         {
@@ -247,8 +249,6 @@ public class LethalExpansion : BaseUnityPlugin
         // TODO: What is this for?
         SetupTerrainFixer();
 
-        Terminal_Patch.ResetFireExitAmounts();
-
         // TODO: What is this for?
         UnityEngine.Object[] volumes = Resources.FindObjectsOfTypeAll(typeof(Volume));
         for (int i = 0; i < volumes.Length; i++)
@@ -267,6 +267,10 @@ public class LethalExpansion : BaseUnityPlugin
         isInGame = true;
     }
 
+    // preload the terrain shader
+    // otherwise it's 100% crash on 100% setups
+    // theres not any vanilla map that use terrain
+    // - HolographicWings on Discord
     void SetupTerrainFixer()
     {
         terrainFixer = new GameObject();
@@ -293,7 +297,7 @@ public class LethalExpansion : BaseUnityPlugin
         // StartCoroutine(LoadCustomMoon(scene));
         LoadCustomMoon(scene);
 
-        String[] requiredObjectTags = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
+        string[] requiredObjectTags = { "MapPropsContainer", "OutsideAINode", "SpawnDenialPoint", "ItemShipLandingNode", "OutsideLevelNavMesh" };
         foreach (string requiredObjectTag in requiredObjectTags)
         {
             bool missingGameObject = GameObject.FindGameObjectWithTag(requiredObjectTag) == null || GameObject.FindGameObjectsWithTag(requiredObjectTag).Any(o => o.scene.name != "InitSceneLaunchOptions");
@@ -308,7 +312,7 @@ public class LethalExpansion : BaseUnityPlugin
             requiredObject.transform.position = new Vector3(0, -200, 0);
 
             SceneManager.MoveGameObjectToScene(requiredObject, scene);
-            LethalExpansion.Log.LogInfo($"Added required object with tag: {requiredObjectTag}");
+            LethalExpansion.Log.LogInfo($"Added required object with tag '{requiredObjectTag}'");
         }
 
         GameObject dropShip = GameObject.Find("ItemShipAnimContainer");
@@ -333,41 +337,22 @@ public class LethalExpansion : BaseUnityPlugin
             }
         }
 
-        // TODO: What is this for?
         RuntimeDungeon runtimeDungeon = GameObject.FindObjectOfType<RuntimeDungeon>(false);
         if (runtimeDungeon == null)
         {
-            GameObject dungeonGenerator = new GameObject();
-            dungeonGenerator.name = "DungeonGenerator";
-            dungeonGenerator.tag = "DungeonGenerator";
-            dungeonGenerator.transform.position = new Vector3(0, -200, 0);
+            LethalExpansion.Log.LogInfo("Adding 'DungeonGenerator'");
 
-            runtimeDungeon = dungeonGenerator.AddComponent<RuntimeDungeon>();
-            runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
-            runtimeDungeon.Generator.LengthMultiplier = 0.8f;
-            runtimeDungeon.Generator.PauseBetweenRooms = 0.2f;
-            runtimeDungeon.GenerateOnStart = false;
-            runtimeDungeon.Root = dungeonGenerator;
-            runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
-
-            UnityNavMeshAdapter dungeonNavMesh = dungeonGenerator.AddComponent<UnityNavMeshAdapter>();
-            dungeonNavMesh.BakeMode = UnityNavMeshAdapter.RuntimeNavMeshBakeMode.FullDungeonBake;
-            dungeonNavMesh.LayerMask = 35072; // 256 + 2048 + 32768 = 35072 (What does each of these correspond to?)
+            GameObject dungeonGenerator = CreateDungeonGenerator();
+            runtimeDungeon = dungeonGenerator.GetComponent<RuntimeDungeon>();
 
             SceneManager.MoveGameObjectToScene(dungeonGenerator, scene);
         }
-        else
+        else if (runtimeDungeon.Generator.DungeonFlow == null)
         {
-            if (runtimeDungeon.Generator.DungeonFlow == null)
-            {
-                runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
-            }
-        }
+            runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
 
-        // TODO: What is thie purpose of this?
-        // Is it to force an exact amount of fire exits? but why?
-        int fireExists = RoundManager.Instance.currentLevel.GetFireExitAmountOverwrite();
-        runtimeDungeon.Generator.DungeonFlow.GlobalProps.First(p => p.ID == 1231).Count = new IntRange(fireExists, fireExists);
+            LethalExpansion.Log.LogInfo("Setting missing DungeonFlow in DungeonGenerator");
+        }
 
         GameObject outOfBounds = GameObject.CreatePrimitive(PrimitiveType.Cube);
         outOfBounds.name = "OutOfBounds";
@@ -386,6 +371,27 @@ public class LethalExpansion : BaseUnityPlugin
         rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
         SceneManager.MoveGameObjectToScene(outOfBounds, scene);
+    }
+
+    private GameObject CreateDungeonGenerator()
+    {
+        GameObject dungeonGenerator = new GameObject();
+        dungeonGenerator.name = "DungeonGenerator";
+        dungeonGenerator.tag = "DungeonGenerator";
+        dungeonGenerator.transform.position = new Vector3(0, -200, 0);
+
+        RuntimeDungeon runtimeDungeon = dungeonGenerator.AddComponent<RuntimeDungeon>();
+        runtimeDungeon.Generator.DungeonFlow = RoundManager.Instance.dungeonFlowTypes[0];
+        runtimeDungeon.Generator.LengthMultiplier = 0.8f;
+        runtimeDungeon.Generator.PauseBetweenRooms = 0.2f;
+        runtimeDungeon.GenerateOnStart = false;
+        runtimeDungeon.Root = dungeonGenerator;
+
+        UnityNavMeshAdapter dungeonNavMesh = dungeonGenerator.AddComponent<UnityNavMeshAdapter>();
+        dungeonNavMesh.BakeMode = UnityNavMeshAdapter.RuntimeNavMeshBakeMode.FullDungeonBake;
+        dungeonNavMesh.LayerMask = 35072; // 256 + 2048 + 32768 = 35072 (What does each of these correspond to?)
+
+        return dungeonGenerator;
     }
 
     private AudioMixerGroup GetDiageticMasterAudioMixer()
@@ -442,7 +448,6 @@ public class LethalExpansion : BaseUnityPlugin
         if (scene.name.StartsWith("Level") || scene.name == "CompanyBuilding" || (scene.name == "InitSceneLaunchOptions" && isInGame))
         {
             currentWaterSurface = null;
-            Terminal_Patch.ResetFireExitAmounts();
         }
     }
 

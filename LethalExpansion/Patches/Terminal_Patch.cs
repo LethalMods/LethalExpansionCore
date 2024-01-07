@@ -1,5 +1,4 @@
 ﻿using HarmonyLib;
-using LethalExpansionCore.Extenders;
 using LethalExpansionCore.Utils;
 using LethalSDK.Utils;
 using LethalSDK.ScriptableObjects;
@@ -8,8 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
-using DunGen;
-using DunGen.Graph;
 
 namespace LethalExpansionCore.Patches;
 
@@ -21,9 +18,6 @@ internal class Terminal_Patch
     public static bool scrapsPatched = false;
     public static bool moonsPatched = false;
     public static bool assetsGotten = false;
-    public static bool flowFireExitSaved = false;
-
-    public static List<int> fireExitAmounts = new List<int>();
 
     public static TerminalKeyword routeKeyword;
     public static TerminalKeyword infoKeyword;
@@ -46,7 +40,6 @@ internal class Terminal_Patch
         ResetTerminalKeywords(__instance);
         AddMoons(__instance);
         UpdateMoonsCatalogue(__instance);
-        SaveFireExitAmounts();
 
         if (LethalExpansion.delayedLevelChange != -1)
         {
@@ -493,8 +486,6 @@ internal class Terminal_Patch
         newLevel.daytimeEnemySpawnChanceThroughDay = newMoon.DaytimeEnemySpawnChanceThroughDay;
         newLevel.daytimeEnemiesProbabilityRange = newMoon.DaytimeEnemiesProbabilityRange;
         newLevel.levelIncludesSnowFootprints = newMoon.LevelIncludesSnowFootprints;
-
-        newLevel.SetFireExitAmountOverwrite(newMoon.FireExitsAmountOverwrite);
         return newLevel;
     }
 
@@ -666,47 +657,5 @@ internal class Terminal_Patch
         }
 
         return inputText;
-    }
-
-    private static void SaveFireExitAmounts()
-    {
-        if (flowFireExitSaved)
-        {
-            return;
-        }
-
-        try
-        {
-            foreach (var flow in RoundManager.Instance.dungeonFlowTypes)
-            {
-                flow.SetDefaultFireExitAmount(flow.GlobalProps.First(p => p.ID == 1231).Count.Min);
-            }
-
-            flowFireExitSaved = true;
-        }
-        catch (Exception ex)
-        {
-            LethalExpansion.Log.LogError($"Failed to save fire exit amount. {ex.Message}");
-        }
-    }
-
-    public static void ResetFireExitAmounts()
-    {
-        if (!flowFireExitSaved)
-        {
-            return;
-        }
-
-        try
-        {
-            foreach (DungeonFlow flow in RoundManager.Instance.dungeonFlowTypes)
-            {
-                flow.GlobalProps.First(p => p.ID == 1231).Count = new IntRange(flow.GetDefaultFireExitAmount(), flow.GetDefaultFireExitAmount());
-            }
-        }
-        catch (Exception ex)
-        {
-            LethalExpansion.Log.LogError($"Failed to reset fire exit amount. {ex.Message}");
-        }
     }
 }
