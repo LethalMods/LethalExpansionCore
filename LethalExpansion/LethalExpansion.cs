@@ -25,7 +25,7 @@ public static class PluginInformation
 {
     public const string PLUGIN_GUID = "com.github.lethalmods.lethalexpansioncore";
     public const string PLUGIN_NAME = "LethalExpansion(core)";
-    public const string PLUGIN_VERSION = "1.3.6";
+    public const string PLUGIN_VERSION = "1.3.7";
 }
 
 [BepInPlugin(PluginInformation.PLUGIN_GUID, PluginInformation.PLUGIN_NAME, PluginInformation.PLUGIN_VERSION)]
@@ -192,29 +192,33 @@ public class LethalExpansion : BaseUnityPlugin
     {
         LethalExpansion.Log.LogInfo($"Loading scene '{scene.name}'");
 
-        if (scene.name == "InitScene")
+        try
         {
-            networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+            if (scene.name == "InitScene")
+            {
+                networkManager = GameObject.Find("NetworkManager").GetComponent<NetworkManager>();
+            }
+            else if (scene.name == "MainMenu")
+            {
+                OnMainMenuLoaded(scene);
+            }
+            else if (scene.name == "CompanyBuilding" || scene.name.StartsWith("Level"))
+            {
+                terrainFixer.SetActive(false);
+                LethalExpansion.Log.LogInfo("Disabled TerrainFixer");
+            }
+            else if (scene.name == "SampleSceneRelay")
+            {
+                OnSampleSceneRelayLoaded(scene);
+            }
+            else if (scene.name == "InitSceneLaunchOptions" && isInGame)
+            {
+                OnInitSceneLaunchOptionsLoaded(scene);
+            }
         }
-        else if (scene.name == "MainMenu")
+        catch(Exception ex)
         {
-            OnMainMenuLoaded(scene);
-        }
-        else if (scene.name == "CompanyBuilding")
-        {
-            terrainFixer.SetActive(false);
-        }
-        else if (scene.name == "SampleSceneRelay")
-        {
-            OnSampleSceneRelayLoaded(scene);
-        }
-        else if (scene.name.StartsWith("Level"))
-        {
-            terrainFixer.SetActive(false);
-        }
-        else if (scene.name == "InitSceneLaunchOptions" && isInGame)
-        {
-            OnInitSceneLaunchOptionsLoaded(scene);
+            LethalExpansion.Log.LogError($"Something went wrong when loading scene '{scene.name}'. {ex}");
         }
     }
 
@@ -288,6 +292,8 @@ public class LethalExpansion : BaseUnityPlugin
 
     void OnInitSceneLaunchOptionsLoaded(Scene scene)
     {
+        LethalExpansion.Log.LogInfo("OnInitSceneLaunchOptionsLoaded");
+
         terrainFixer.SetActive(false);
         foreach (GameObject obj in scene.GetRootGameObjects())
         {
