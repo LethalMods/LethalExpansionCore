@@ -24,10 +24,23 @@ public class DungeonGenerator_Patch
 
         EntranceTeleport[] entrances = UnityEngine.GameObject.FindObjectsOfType<EntranceTeleport>();
 
-        // Reduce by one to account for the main entrance
-        int fireExitCount = entrances.Length - 1;
+        int uniqueEntranceCount = entrances
+            .Select(entrance => entrance.entranceId)
+            .Distinct()
+            .Count();
 
-        IntRange oldRange = SetFireExitAmount(__instance.DungeonFlow, new IntRange(fireExitCount, fireExitCount));
+        int duplicateEntranceCount = entrances.Length - uniqueEntranceCount;
+        if (duplicateEntranceCount > 0)
+        {
+            LethalExpansion.Log.LogWarning($"Found {duplicateEntranceCount} entrance(s) with the same id as another entrance, this means multiple entrances may take you to the same place");
+        }
+
+        int uniqueFireExits = entrances
+            .Where(entrance => entrance.entranceId != 0)
+            .Distinct()
+            .Count();
+
+        IntRange oldRange = SetFireExitAmount(__instance.DungeonFlow, new IntRange(uniqueFireExits, uniqueFireExits));
         __state = oldRange;
     }
 
