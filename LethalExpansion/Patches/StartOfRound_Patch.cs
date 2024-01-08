@@ -11,6 +11,7 @@ internal class StartOfRound_Patch
     [HarmonyPostfix]
     public static void StartGame_Postfix(StartOfRound __instance)
     {
+        // TODO: What is the purpose of this?
         if (__instance.currentLevel.name.StartsWith("Assets/Mods/"))
         {
             SceneManager.LoadScene(__instance.currentLevel.name, LoadSceneMode.Additive);
@@ -19,27 +20,14 @@ internal class StartOfRound_Patch
         LethalExpansion.Log.LogInfo("Game started.");
     }
 
-    [HarmonyPatch("OnPlayerConnectedClientRpc")]
-    [HarmonyPostfix]
-    static void OnPlayerConnectedClientRpc_Postfix(StartOfRound __instance, ulong clientId, int connectedPlayers, ulong[] connectedPlayerIdsOrdered, int assignedPlayerObjectId, int serverMoneyAmount, int levelID, int profitQuota, int timeUntilDeadline, int quotaFulfilled, int randomSeed)
-    {
-        if (NetworkManager.Singleton.IsServer)
-        {
-            return;
-        }
-
-        LethalExpansion.sessionWaiting = false;
-        LethalExpansion.Log.LogInfo($"LethalExpansion Client Started. {__instance.NetworkManager.LocalClientId}");
-    }
-
     [HarmonyPatch(nameof(StartOfRound.SetMapScreenInfoToCurrentLevel))]
     [HarmonyPostfix]
     static void SetMapScreenInfoToCurrentLevel_Postfix(StartOfRound __instance)
     {
-        AutoScrollText obj = __instance.screenLevelDescription.GetComponent<AutoScrollText>();
-        if (obj != null)
+        AutoScrollText text = __instance.screenLevelDescription.GetComponent<AutoScrollText>();
+        if (text != null)
         {
-            obj.ResetScrolling();
+            text.ResetScrolling();
         }
     }
 
@@ -47,20 +35,10 @@ internal class StartOfRound_Patch
     [HarmonyPrefix]
     static void ChangeLevel_Prefix(StartOfRound __instance, ref int levelID)
     {
-        if (levelID < __instance.levels.Length)
+        if (levelID >= __instance.levels.Length)
         {
-            return;
-        }
-
-        if (LethalExpansion.delayedLevelChange == -1)
-        {
-            LethalExpansion.delayedLevelChange = levelID;
             levelID = 0;
-        }
-        else
-        {
             LethalExpansion.Log.LogError($"Error loading moon ID {levelID}.");
-            levelID = 0;
         }
     }
 }

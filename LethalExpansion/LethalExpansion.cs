@@ -7,7 +7,6 @@ using LethalExpansionCore.Utils;
 using System;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -25,7 +24,7 @@ public static class PluginInformation
 {
     public const string PLUGIN_GUID = "com.github.lethalmods.lethalexpansioncore";
     public const string PLUGIN_NAME = "LethalExpansion(core)";
-    public const string PLUGIN_VERSION = "1.3.7";
+    public const string PLUGIN_VERSION = "1.3.8";
 }
 
 [BepInPlugin(PluginInformation.PLUGIN_GUID, PluginInformation.PLUGIN_NAME, PluginInformation.PLUGIN_VERSION)]
@@ -43,11 +42,7 @@ public class LethalExpansion : BaseUnityPlugin
 
     public static string LethalExpansionPath = null;
 
-    public static bool sessionWaiting = true;
-    public static bool alreadyPatched = false;
     public static bool isInGame = false;
-
-    public static int delayedLevelChange = -1;
 
     public static ManualLogSource Log;
 
@@ -224,11 +219,6 @@ public class LethalExpansion : BaseUnityPlugin
 
     void OnMainMenuLoaded(Scene scene)
     {
-        sessionWaiting = true;
-        alreadyPatched = false;
-
-        LethalExpansion.delayedLevelChange = -1;
-
         isInGame = false;
 
         AssetGather.Instance.AddAudioMixer(GameObject.Find("Canvas/MenuManager").GetComponent<AudioSource>().outputAudioMixerGroup.audioMixer);
@@ -265,8 +255,6 @@ public class LethalExpansion : BaseUnityPlugin
             
             volume.sharedProfile = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<VolumeProfile>("Assets/Mods/LethalExpansion/Sky and Fog Global Volume Profile.asset");
         }
-
-        WaitForSession().GetAwaiter();
 
         isInGame = true;
     }
@@ -454,20 +442,6 @@ public class LethalExpansion : BaseUnityPlugin
         if (scene.name.StartsWith("Level") || scene.name == "CompanyBuilding" || (scene.name == "InitSceneLaunchOptions" && isInGame))
         {
             currentWaterSurface = null;
-        }
-    }
-
-    private async Task WaitForSession()
-    {
-        while (sessionWaiting)
-        {
-            await Task.Delay(1000);
-        }
-
-        if (!alreadyPatched)
-        {
-            Terminal_Patch.MainPatch(GameObject.Find("TerminalScript").GetComponent<Terminal>());
-            alreadyPatched = true;
         }
     }
 }

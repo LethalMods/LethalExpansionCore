@@ -17,6 +17,7 @@ internal class Terminal_Patch
 
     public static bool scrapsPatched = false;
     public static bool moonsPatched = false;
+    public static bool moonsTerminalPatched = false;
     public static bool assetsGotten = false;
 
     public static TerminalKeyword routeKeyword;
@@ -26,34 +27,52 @@ internal class Terminal_Patch
     public static List<string> newMoonsNames = new List<string>();
     public static Dictionary<int, Moon> newMoons = new Dictionary<int, Moon>();
 
-    public static void MainPatch(Terminal __instance)
+    [HarmonyPatch(typeof(StartOfRound), "Awake")]
+    [HarmonyPostfix]
+    public static void StartOfRound_Awake()
+    {
+        AddContent();
+    }
+
+    [HarmonyPatch(typeof(Terminal), "Start")]
+    [HarmonyPrefix]
+    public static void Terminal_Start(Terminal __instance)
+    {
+        UpdateTerminal(__instance);
+    }
+
+    public static void AddContent()
     {
         scrapsPatched = false;
         moonsPatched = false;
 
-        routeKeyword = __instance.terminalNodes.allKeywords.First(k => k.word == "route");
-        infoKeyword = __instance.terminalNodes.allKeywords.First(k => k.word == "info");
+        // TODO: It might be a good idea to gather the assets again later on,
+        // if there are other mods which add content you might want to use
+        GatherAssets();
+        AddScraps();
+        AddMoons();
+        // TODO: Apply scrap spawn chance again for the new moons
+
+        LethalExpansion.Log.LogInfo("Finished adding moons and scrap");
+    }
+
+    public static void UpdateTerminal(Terminal terminal)
+    {
+        moonsTerminalPatched = false;
+
+        routeKeyword = terminal.terminalNodes.allKeywords.First(k => k.word == "route");
+        infoKeyword = terminal.terminalNodes.allKeywords.First(k => k.word == "info");
 
         Hotfix_DoubleRoutes();
-        GatherAssets();
-        AddScraps(__instance);
-        ResetTerminalKeywords(__instance);
-        AddMoons(__instance);
-        UpdateMoonsCatalogue(__instance);
-
-        if (LethalExpansion.delayedLevelChange != -1)
-        {
-            LethalExpansion.Log.LogInfo($"Delayed level change to level by id {LethalExpansion.delayedLevelChange}");
-
-            StartOfRound.Instance.ChangeLevel(LethalExpansion.delayedLevelChange);
-            StartOfRound.Instance.ChangePlanet();
-        }
+        ResetTerminalKeywords(terminal);
+        AddMoonTerminalEntries(terminal);
+        UpdateMoonsCatalogue(terminal);
 
         // Because it uses a random based on the map seed the weather will always be synced as long as
         // the conditions are the same (e.g StartOfRound.levels and SelectableLevel.randomWeathers)
         StartOfRound.Instance.SetPlanetsWeather();
 
-        LethalExpansion.Log.LogInfo("Terminal Main Patch.");
+        LethalExpansion.Log.LogInfo("Finished updating terminal");
     }
 
     private static void GatherAssets()
@@ -138,7 +157,7 @@ internal class Terminal_Patch
         assetsGotten = true;
     }
 
-    public static void AddScraps(Terminal __instance)
+    public static void AddScraps()
     {
         if (scrapsPatched)
         {
@@ -151,96 +170,34 @@ internal class Terminal_Patch
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 
-            if (bundle == null || manifest == null)
+            if (bundle == null || manifest == null || manifest.scraps == null)
             {
                 continue;
             }
 
-            if (manifest.scraps == null)
+            foreach (Scrap scrap in manifest.scraps)
             {
-                continue;
-            }
-
-            foreach (Scrap newScrap in manifest.scraps)
-            {
-                if (!AssetBundlesManager.Instance.IsScrapCompatible(newScrap))
+                if (!AssetBundlesManager.Instance.IsScrapCompatible(scrap))
                 {
                     continue;
                 }
 
-                if (newScrapsNames.Contains(newScrap.itemName))
+                if (newScrapsNames.Contains(scrap.itemName))
                 {
-                    LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' has already been added");
+                    LethalExpansion.Log.LogWarning($"Scrap '{scrap.itemName}' has already been added");
                     continue;
                 }
 
                 try
                 {
-                    Item item = newScrap.prefab.GetComponent<PhysicsProp>().itemProperties;
+                    Item item = CreateScrapItem(scrap, defaultGrabSound, defaultDropSound);
+                    AddScrap(scrap, item);
 
-                    AudioSource audioSource = newScrap.prefab.GetComponent<AudioSource>();
-                    audioSource.outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
-
-                    AudioClip grabSfx = null;
-                    if (newScrap.grabSFX.Length > 0 && AssetGather.Instance.audioClips.ContainsKey(newScrap.grabSFX))
-                    {
-                        grabSfx = AssetGather.Instance.audioClips[newScrap.grabSFX];
-                    }
-                    item.grabSFX = grabSfx ?? defaultGrabSound;
-
-                    AudioClip dropSfx = null;
-                    if (newScrap.grabSFX.Length > 0 && AssetGather.Instance.audioClips.ContainsKey(newScrap.dropSFX))
-                    {
-                        dropSfx = AssetGather.Instance.audioClips[newScrap.dropSFX];
-                    }
-                    item.dropSFX = dropSfx ?? defaultDropSound;
-
-                    StartOfRound.Instance.allItemsList.itemsList.Add(item);
-                    if (newScrap.useGlobalSpawnWeight)
-                    {
-                        SpawnableItemWithRarity itemRarity = new SpawnableItemWithRarity();
-                        itemRarity.spawnableItem = item;
-                        itemRarity.rarity = newScrap.globalSpawnWeight;
-                        foreach (SelectableLevel level in __instance.moonsCatalogueList)
-                        {
-                            level.spawnableScrap.Add(itemRarity);
-                        }
-                    }
-                    else
-                    {
-                        ScrapSpawnChancePerScene[] perPlanetSpawnWeight = newScrap.perPlanetSpawnWeight();
-                        foreach (SelectableLevel level in __instance.moonsCatalogueList)
-                        {
-                            bool containsPlanet = perPlanetSpawnWeight.Any(l => l.SceneName == level.PlanetName);
-                            if (!containsPlanet)
-                            {
-                                continue;
-                            }
-
-                            try
-                            {
-                                ScrapSpawnChancePerScene scrapSpawnChance = perPlanetSpawnWeight.First(l => l.SceneName == level.PlanetName);
-
-                                SpawnableItemWithRarity itemRarity = new SpawnableItemWithRarity();
-                                itemRarity.spawnableItem = item;
-                                itemRarity.rarity = scrapSpawnChance.SpawnWeight;
-
-                                level.spawnableScrap.Add(itemRarity);
-                            }
-                            catch (Exception ex)
-                            {
-                                LethalExpansion.Log.LogError($"Failed to add scrap '{newScrap.itemName}' spawn chance to moon '{level.PlanetName}'. {ex.Message}");
-                            }
-                        }
-                    }
-
-                    newScrapsNames.Add(item.itemName);
-                    AssetGather.Instance.AddScrap(item);
-                    LethalExpansion.Log.LogInfo($"Added scrap '{newScrap.itemName}'");
+                    LethalExpansion.Log.LogInfo($"Added scrap '{scrap.itemName}'");
                 }
                 catch (Exception ex)
                 {
-                    LethalExpansion.Log.LogError($"Failed to add scrap '{newScrap.itemName}'. {ex.Message}");
+                    LethalExpansion.Log.LogError($"Failed to add scrap '{scrap.itemName}'. {ex.Message}");
                 }
             }
         }
@@ -248,7 +205,74 @@ internal class Terminal_Patch
         scrapsPatched = true;
     }
 
-    public static void RemoveMoon(Terminal __instance, string moonName)
+    public static Item CreateScrapItem(Scrap scrap, AudioClip defaultGrabSound, AudioClip defaultDropSound)
+    {
+        Item item = scrap.prefab.GetComponent<PhysicsProp>().itemProperties;
+
+        AudioSource audioSource = scrap.prefab.GetComponent<AudioSource>();
+        audioSource.outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+
+        AudioClip grabSfx = null;
+        if (scrap.grabSFX.Length > 0 && AssetGather.Instance.audioClips.ContainsKey(scrap.grabSFX))
+        {
+            grabSfx = AssetGather.Instance.audioClips[scrap.grabSFX];
+        }
+        item.grabSFX = grabSfx ?? defaultGrabSound;
+
+        AudioClip dropSfx = null;
+        if (scrap.dropSFX.Length > 0 && AssetGather.Instance.audioClips.ContainsKey(scrap.dropSFX))
+        {
+            dropSfx = AssetGather.Instance.audioClips[scrap.dropSFX];
+        }
+        item.dropSFX = dropSfx ?? defaultDropSound;
+
+        return item;
+    }
+
+    public static void AddScrap(Scrap scrap, Item item)
+    {
+        SpawnableItemWithRarity GetSpawnableItem(SelectableLevel level)
+        {
+            if (scrap.useGlobalSpawnWeight)
+            {
+                return new SpawnableItemWithRarity { spawnableItem = item, rarity = scrap.globalSpawnWeight };
+            }
+
+            ScrapSpawnChancePerScene[] perPlanetSpawnWeight = scrap.perPlanetSpawnWeight();
+
+            bool containsPlanet = perPlanetSpawnWeight.Any(l => l.SceneName == level.PlanetName);
+            if (!containsPlanet)
+            {
+                return null;
+            }
+
+            ScrapSpawnChancePerScene scrapSpawnChance = perPlanetSpawnWeight.First(l => l.SceneName == level.PlanetName);
+            return new SpawnableItemWithRarity { spawnableItem = item, rarity = scrapSpawnChance.SpawnWeight };
+        }
+
+        StartOfRound.Instance.allItemsList.itemsList.Add(item);
+
+        foreach (SelectableLevel level in StartOfRound.Instance.levels)
+        {
+            try
+            {
+                SpawnableItemWithRarity spawnableItem = GetSpawnableItem(level);
+                if (spawnableItem != null)
+                {
+                    level.spawnableScrap.Add(spawnableItem);
+                }
+            }
+            catch (Exception ex)
+            {
+                LethalExpansion.Log.LogError($"Failed to add scrap '{scrap.itemName}' spawn chance to moon '{level.PlanetName}'. {ex.Message}");
+            }
+        }
+
+        newScrapsNames.Add(item.itemName);
+        AssetGather.Instance.AddScrap(item);
+    }
+
+    public static void RemoveMoonTerminalEntry(Terminal terminal, string moonName)
     {
         if (moonName == null)
         {
@@ -257,7 +281,7 @@ internal class Terminal_Patch
 
         int countEntries()
         {
-            return __instance.moonsCatalogueList.Length +
+            return terminal.moonsCatalogueList.Length +
                 routeKeyword.compatibleNouns.Length +
                 infoKeyword.compatibleNouns.Length;
         }
@@ -266,7 +290,7 @@ internal class Terminal_Patch
         {
             int count = countEntries();
 
-            __instance.moonsCatalogueList = __instance.moonsCatalogueList
+            terminal.moonsCatalogueList = terminal.moonsCatalogueList
                 .Where(moon => !moon.name.Contains(moonName))
                 .ToArray();
 
@@ -280,69 +304,68 @@ internal class Terminal_Patch
 
             if (count - countEntries() != 0)
             {
-                LethalExpansion.Log.LogInfo($"Removed moon '{moonName}'");
+                LethalExpansion.Log.LogInfo($"Removed terminal entry for moon '{moonName}'");
             }
             else
             {
-                LethalExpansion.Log.LogInfo($"Moon '{moonName}' does not exist");
+                LethalExpansion.Log.LogInfo($"Terminal entry for moon '{moonName}' does not exist");
             }
         }
         catch (Exception ex)
         {
-            LethalExpansion.Log.LogError($"Failed to remove moon '{moonName}'. {ex.Message}");
+            LethalExpansion.Log.LogError($"Failed to remove terminal entry for moon '{moonName}'. {ex.Message}");
         }
     }
 
-    public static void AddMoons(Terminal __instance)
+    public static void AddMoons()
     {
-        newMoons = new Dictionary<int, Moon>();
-
         if (moonsPatched)
         {
             return;
         }
 
+        // TODO: This could be handled better,
+        // right now we just assume all the moons will
+        // be cleared, what if that changes in the future.
+        newMoonsNames.Clear();
+        newMoons.Clear();
+
         foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 
-            if (bundle == null || manifest == null)
+            if (bundle == null || manifest == null || manifest.moons == null)
             {
                 continue;
             }
 
-            if (manifest.moons == null)
+            foreach (Moon moon in manifest.moons)
             {
-                continue;
-            }
-
-            foreach (Moon newMoon in manifest.moons)
-            {
-                if (!AssetBundlesManager.Instance.IsMoonCompatible(newMoon))
+                if (!AssetBundlesManager.Instance.IsMoonCompatible(moon))
                 {
                     continue;
                 }
-
-                if (newMoonsNames.Contains(newMoon.MoonName))
+                
+                if (newMoonsNames.Contains(moon.MoonName))
                 {
-                    LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' has already been added");
+                    LethalExpansion.Log.LogWarning($"Moon '{moon.MoonName}' has already been added");
                     continue;
                 }
 
                 try
                 {
-                    SelectableLevel newLevel = CreateMoon(newMoon);
-                    AddMoonTerminalEntry(__instance, newMoon, newLevel);
+                    SelectableLevel newLevel = CreateMoon(moon);
 
                     StartOfRound.Instance.levels = StartOfRound.Instance.levels.AddItem(newLevel).ToArray();
 
-                    newMoons.Add(newLevel.levelID, newMoon);
+                    newMoons.Add(newLevel.levelID, moon);
+                    newMoonsNames.Add(moon.MoonName);
 
-                    LethalExpansion.Log.LogInfo($"Added moon '{newMoon.MoonName}'");
+                    LethalExpansion.Log.LogInfo($"Added moon '{moon.MoonName}'");
                 }
                 catch (Exception ex)
                 {
-                    LethalExpansion.Log.LogError($"Failed to add moon '{newMoon.MoonName}'. {ex.Message}");
+                    LethalExpansion.Log.LogError($"Failed to add moon '{moon.MoonName}'. {ex.Message}");
                 }
             }
         }
@@ -350,146 +373,147 @@ internal class Terminal_Patch
         moonsPatched = true;
     }
 
-    private static SelectableLevel CreateMoon(Moon newMoon)
+    public static void AddMoonTerminalEntries(Terminal __instance)
     {
-        SelectableLevel newLevel = ScriptableObject.CreateInstance<SelectableLevel>();
-
-        newLevel.name = newMoon.PlanetName;
-        newLevel.PlanetName = newMoon.PlanetName;
-        newLevel.sceneName = "InitSceneLaunchOptions";
-        newLevel.levelID = StartOfRound.Instance.levels.Length;
-
-        if (!string.IsNullOrEmpty(newMoon.OrbitPrefabName) && AssetGather.Instance.planetPrefabs.ContainsKey(newMoon.OrbitPrefabName))
+        if (moonsTerminalPatched)
         {
-            newLevel.planetPrefab = AssetGather.Instance.planetPrefabs[newMoon.OrbitPrefabName];
+            return;
+        }
+
+        foreach (KeyValuePair<int, Moon> moonEntry in newMoons)
+        {
+            SelectableLevel level = StartOfRound.Instance.levels.FirstOrDefault(level => level.levelID == moonEntry.Key);
+            if (level == null)
+            {
+                LethalExpansion.Log.LogWarning($"Unable to add terminal entry for moon '{moonEntry.Value.MoonName}', it does not exist");
+                continue;
+            }
+
+            AddMoonTerminalEntry(__instance, moonEntry.Value, level);
+            LethalExpansion.Log.LogInfo($"Added terminal entry for moon '{moonEntry.Value.MoonName}'");
+        }
+
+        moonsTerminalPatched = true;
+    }
+
+    public static SelectableLevel CreateMoon(Moon moon)
+    {
+        SelectableLevel level = ScriptableObject.CreateInstance<SelectableLevel>();
+        level.name = moon.PlanetName;
+        level.PlanetName = moon.PlanetName;
+        level.sceneName = "InitSceneLaunchOptions";
+        level.levelID = StartOfRound.Instance.levels.Length;
+
+        if (!string.IsNullOrEmpty(moon.OrbitPrefabName) && AssetGather.Instance.planetPrefabs.ContainsKey(moon.OrbitPrefabName))
+        {
+            level.planetPrefab = AssetGather.Instance.planetPrefabs[moon.OrbitPrefabName];
         }
         else
         {
-            newLevel.planetPrefab = AssetGather.Instance.planetPrefabs.First().Value;
+            level.planetPrefab = AssetGather.Instance.planetPrefabs.First().Value;
         }
 
-        newLevel.lockedForDemo = true;
-        newLevel.spawnEnemiesAndScrap = newMoon.SpawnEnemiesAndScrap;
+        level.lockedForDemo = true;
+        level.spawnEnemiesAndScrap = moon.SpawnEnemiesAndScrap;
 
-        if (!string.IsNullOrWhiteSpace(newMoon.PlanetDescription))
+        if (!string.IsNullOrWhiteSpace(moon.PlanetDescription))
         {
-            newLevel.LevelDescription = newMoon.PlanetDescription;
+            level.LevelDescription = moon.PlanetDescription;
         }
         else
         {
-            newLevel.LevelDescription = string.Empty;
+            level.LevelDescription = string.Empty;
         }
 
-        newLevel.videoReel = newMoon.PlanetVideo;
+        level.videoReel = moon.PlanetVideo;
 
-        if (!string.IsNullOrEmpty(newMoon.RiskLevel))
+        if (!string.IsNullOrEmpty(moon.RiskLevel))
         {
-            newLevel.riskLevel = newMoon.RiskLevel;
+            level.riskLevel = moon.RiskLevel ?? string.Empty;
         }
         else
         {
-            newLevel.riskLevel = string.Empty;
+            level.riskLevel = string.Empty;
         }
 
-        newLevel.timeToArrive = newMoon.TimeToArrive;
-        newLevel.DaySpeedMultiplier = newMoon.DaySpeedMultiplier;
-        newLevel.planetHasTime = newMoon.PlanetHasTime;
-        newLevel.factorySizeMultiplier = newMoon.FactorySizeMultiplier;
+        level.timeToArrive = moon.TimeToArrive;
+        level.DaySpeedMultiplier = moon.DaySpeedMultiplier;
+        level.planetHasTime = moon.PlanetHasTime;
+        level.factorySizeMultiplier = moon.FactorySizeMultiplier;
 
-        newLevel.overrideWeather = newMoon.OverwriteWeather;
-        newLevel.overrideWeatherType = (LevelWeatherType)(int)newMoon.OverwriteWeatherType;
-        newLevel.currentWeather = LevelWeatherType.None;
+        level.overrideWeather = moon.OverwriteWeather;
+        level.overrideWeatherType = (LevelWeatherType)(int)moon.OverwriteWeatherType;
+        level.currentWeather = LevelWeatherType.None;
 
-        List<RandomWeatherWithVariables> randomWeatherTypes = new List<RandomWeatherWithVariables>();
-        foreach (RandomWeatherPair item in newMoon.RandomWeatherTypes())
-        {
-            randomWeatherTypes.Add(new RandomWeatherWithVariables() { weatherType = (LevelWeatherType)(int)item.Weather, weatherVariable = item.WeatherVariable1, weatherVariable2 = item.WeatherVariable2 });
-        }
-        newLevel.randomWeathers = randomWeatherTypes.ToArray();
+        level.randomWeathers = moon.RandomWeatherTypes()
+            .Select(weather => new RandomWeatherWithVariables() { weatherType = (LevelWeatherType)(int)weather.Weather, weatherVariable = weather.WeatherVariable1, weatherVariable2 = weather.WeatherVariable2 })
+            .ToArray();
 
-        List<IntWithRarity> dungeonFlowTypes = new List<IntWithRarity>();
-        foreach (var item in newMoon.DungeonFlowTypes())
-        {
-            dungeonFlowTypes.Add(new IntWithRarity() { id = item.ID, rarity = item.Rarity });
-        }
-        newLevel.dungeonFlowTypes = dungeonFlowTypes.ToArray();
+        level.dungeonFlowTypes = moon.DungeonFlowTypes()
+            .Select(dungeonFlow => new IntWithRarity() { id = dungeonFlow.ID, rarity = dungeonFlow.Rarity })
+            .ToArray();
 
         List<SpawnableItemWithRarity> spawnableScrap = new List<SpawnableItemWithRarity>();
-        foreach (SpawnableScrapPair item in newMoon.SpawnableScrap())
+        foreach (SpawnableScrapPair item in moon.SpawnableScrap())
         {
             if (!AssetGather.Instance.scraps.TryGetValue(item.ObjectName, out Item scrap))
             {
-                LethalExpansion.Log.LogWarning($"Scrap '{item.ObjectName}' on moon '{newMoon.MoonName}' could not be found, it has not been registered");
+                LethalExpansion.Log.LogWarning($"Scrap '{item.ObjectName}' on moon '{moon.MoonName}' could not be found, it has not been registered");
                 continue;
             }
 
             spawnableScrap.Add(new SpawnableItemWithRarity() { spawnableItem = scrap, rarity = item.SpawnWeight });
         }
-        newLevel.spawnableScrap = spawnableScrap;
+        level.spawnableScrap = spawnableScrap;
 
-        newLevel.minScrap = newMoon.MinScrap;
-        newLevel.maxScrap = newMoon.MaxScrap;
+        level.minScrap = moon.MinScrap;
+        level.maxScrap = moon.MaxScrap;
 
-        if (!string.IsNullOrEmpty(newMoon.LevelAmbienceClips) && AssetGather.Instance.levelAmbiances.ContainsKey(newMoon.LevelAmbienceClips))
+        if (!string.IsNullOrEmpty(moon.LevelAmbienceClips) && AssetGather.Instance.levelAmbiances.ContainsKey(moon.LevelAmbienceClips))
         {
-            newLevel.levelAmbienceClips = AssetGather.Instance.levelAmbiances[newMoon.LevelAmbienceClips];
+            level.levelAmbienceClips = AssetGather.Instance.levelAmbiances[moon.LevelAmbienceClips];
         }
         else
         {
-            newLevel.levelAmbienceClips = AssetGather.Instance.levelAmbiances.First().Value;
+            level.levelAmbienceClips = AssetGather.Instance.levelAmbiances.First().Value;
         }
 
-        newLevel.maxEnemyPowerCount = newMoon.MaxEnemyPowerCount;
+        level.maxEnemyPowerCount = moon.MaxEnemyPowerCount;
 
-        List<SpawnableEnemyWithRarity> enemies = new List<SpawnableEnemyWithRarity>();
-        foreach (SpawnableEnemiesPair item in newMoon.Enemies())
-        {
-            enemies.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
-        }
-        newLevel.Enemies = enemies;
+        level.Enemies = moon.Enemies()
+            .Select(enemy => new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[enemy.EnemyName], rarity = enemy.SpawnWeight })
+            .ToList();
 
-        newLevel.enemySpawnChanceThroughoutDay = newMoon.EnemySpawnChanceThroughoutDay;
-        newLevel.spawnProbabilityRange = newMoon.SpawnProbabilityRange;
+        level.enemySpawnChanceThroughoutDay = moon.EnemySpawnChanceThroughoutDay;
+        level.spawnProbabilityRange = moon.SpawnProbabilityRange;
 
-        List<SpawnableMapObject> spawnableMapObjects = new List<SpawnableMapObject>();
-        foreach (SpawnableMapObjectPair item in newMoon.SpawnableMapObjects())
-        {
-            spawnableMapObjects.Add(new SpawnableMapObject() { prefabToSpawn = AssetGather.Instance.mapObjects[item.ObjectName], spawnFacingAwayFromWall = item.SpawnFacingAwayFromWall, numberToSpawn = item.SpawnRate });
-        }
-        newLevel.spawnableMapObjects = spawnableMapObjects.ToArray();
+        level.spawnableMapObjects = moon.SpawnableMapObjects()
+            .Select(item => new SpawnableMapObject() { prefabToSpawn = AssetGather.Instance.mapObjects[item.ObjectName], spawnFacingAwayFromWall = item.SpawnFacingAwayFromWall, numberToSpawn = item.SpawnRate })
+            .ToArray();
 
-        List<SpawnableOutsideObjectWithRarity> spawnableOutsideObjects = new List<SpawnableOutsideObjectWithRarity>();
-        foreach (SpawnableOutsideObjectPair item in newMoon.SpawnableOutsideObjects())
-        {
-            spawnableOutsideObjects.Add(new SpawnableOutsideObjectWithRarity() { spawnableObject = AssetGather.Instance.outsideObjects[item.ObjectName], randomAmount = item.SpawnRate });
-        }
-        newLevel.spawnableOutsideObjects = spawnableOutsideObjects.ToArray();
+        level.spawnableOutsideObjects = moon.SpawnableOutsideObjects()
+            .Select(item => new SpawnableOutsideObjectWithRarity() { spawnableObject = AssetGather.Instance.outsideObjects[item.ObjectName], randomAmount = item.SpawnRate })
+            .ToArray();
 
-        newLevel.maxOutsideEnemyPowerCount = newMoon.MaxOutsideEnemyPowerCount;
-        newLevel.maxDaytimeEnemyPowerCount = newMoon.MaxDaytimeEnemyPowerCount;
+        level.maxOutsideEnemyPowerCount = moon.MaxOutsideEnemyPowerCount;
+        level.maxDaytimeEnemyPowerCount = moon.MaxDaytimeEnemyPowerCount;
 
-        List<SpawnableEnemyWithRarity> outsideEnemies = new List<SpawnableEnemyWithRarity>();
-        foreach (var item in newMoon.OutsideEnemies())
-        {
-            outsideEnemies.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
-        }
-        newLevel.OutsideEnemies = outsideEnemies;
+        level.OutsideEnemies = moon.OutsideEnemies()
+            .Select(enemy => new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[enemy.EnemyName], rarity = enemy.SpawnWeight })
+            .ToList();
 
-        List<SpawnableEnemyWithRarity> daytimeEnemies = new List<SpawnableEnemyWithRarity>();
-        foreach (var item in newMoon.DaytimeEnemies())
-        {
-            daytimeEnemies.Add(new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[item.EnemyName], rarity = item.SpawnWeight });
-        }
-        newLevel.DaytimeEnemies = daytimeEnemies;
+        level.DaytimeEnemies = moon.DaytimeEnemies()
+            .Select(enemy => new SpawnableEnemyWithRarity() { enemyType = AssetGather.Instance.enemies[enemy.EnemyName], rarity = enemy.SpawnWeight })
+            .ToList();
 
-        newLevel.outsideEnemySpawnChanceThroughDay = newMoon.OutsideEnemySpawnChanceThroughDay;
-        newLevel.daytimeEnemySpawnChanceThroughDay = newMoon.DaytimeEnemySpawnChanceThroughDay;
-        newLevel.daytimeEnemiesProbabilityRange = newMoon.DaytimeEnemiesProbabilityRange;
-        newLevel.levelIncludesSnowFootprints = newMoon.LevelIncludesSnowFootprints;
-        return newLevel;
+        level.outsideEnemySpawnChanceThroughDay = moon.OutsideEnemySpawnChanceThroughDay;
+        level.daytimeEnemySpawnChanceThroughDay = moon.DaytimeEnemySpawnChanceThroughDay;
+        level.daytimeEnemiesProbabilityRange = moon.DaytimeEnemiesProbabilityRange;
+        level.levelIncludesSnowFootprints = moon.LevelIncludesSnowFootprints;
+        return level;
     }
 
-    private static void AddMoonTerminalEntry(Terminal terminal, Moon newMoon, SelectableLevel newLevel)
+    public static void AddMoonTerminalEntry(Terminal terminal, Moon newMoon, SelectableLevel newLevel)
     {
         TerminalKeyword confirmKeyword = terminal.terminalNodes.allKeywords.First(k => k.word == "confirm");
         TerminalKeyword denyKeyword = terminal.terminalNodes.allKeywords.First(k => k.word == "deny");
@@ -515,7 +539,7 @@ internal class Terminal_Patch
         moonRouteConfirm.name = newMoon.MoonName.ToLower() + "RouteConfirm";
         moonRouteConfirm.displayText = $"Routing autopilot to {newMoon.PlanetName}.\r\nYour new balance is [playerCredits].\r\n\r\n{newMoon.BoughtComment}\r\n\r\n";
         moonRouteConfirm.clearPreviousText = true;
-        moonRouteConfirm.buyRerouteToMoon = StartOfRound.Instance.levels.Length;
+        moonRouteConfirm.buyRerouteToMoon = newLevel.levelID;
         moonRouteConfirm.lockedInDemo = true;
         moonRouteConfirm.itemCost = newMoon.RoutePrice;
 
@@ -524,7 +548,7 @@ internal class Terminal_Patch
         moonRoute.displayText = $"The cost to route to {newMoon.PlanetName} is [totalCost]. It is \r\ncurrently [currentPlanetTime] on this moon.\r\n\r\nPlease CONFIRM or DENY.\r\n\r\n\r\n";
         moonRoute.clearPreviousText = true;
         moonRoute.buyRerouteToMoon = -2;
-        moonRoute.displayPlanetInfo = StartOfRound.Instance.levels.Length;
+        moonRoute.displayPlanetInfo = newLevel.levelID;
         moonRoute.lockedInDemo = true;
         moonRoute.overrideOptions = true;
         moonRoute.itemCost = newMoon.RoutePrice;
@@ -555,6 +579,7 @@ internal class Terminal_Patch
         infoKeyword.compatibleNouns = infoKeyword.compatibleNouns.AddItem(moonInfoNoun).ToArray();
     }
 
+    // TODO: is this still necessary?
     private static void Hotfix_DoubleRoutes()
     {
         try
@@ -589,17 +614,17 @@ internal class Terminal_Patch
         }
     }
 
-    private static void ResetTerminalKeywords(Terminal __instance)
+    public static void ResetTerminalKeywords(Terminal terminal)
     {
         try
         {
             if (defaultTerminalKeywords == null || defaultTerminalKeywords.Length == 0)
             {
-                defaultTerminalKeywords = __instance.terminalNodes.allKeywords;
+                defaultTerminalKeywords = terminal.terminalNodes.allKeywords;
             }
             else
             {
-                __instance.terminalNodes.allKeywords = defaultTerminalKeywords;
+                terminal.terminalNodes.allKeywords = defaultTerminalKeywords;
             }
 
             LethalExpansion.Log.LogInfo("Terminal reset.");
@@ -610,13 +635,13 @@ internal class Terminal_Patch
         }
     }
 
-    private static void UpdateMoonsCatalogue(Terminal __instance)
+    public static void UpdateMoonsCatalogue(Terminal terminal)
     {
         try
         {
             string text = "Welcome to the exomoons catalogue.\r\nTo route the autopilot to a moon, use the word ROUTE.\r\nTo learn about any moon, use the word INFO.\r\n____________________________\r\n\r\n* The Company building   //   Buying at [companyBuyingPercent].\r\n\r\n";
 
-            foreach (SelectableLevel moon in __instance.moonsCatalogueList)
+            foreach (SelectableLevel moon in terminal.moonsCatalogueList)
             {
                 bool isHidden = newMoons.ContainsKey(moon.levelID) && newMoons[moon.levelID].IsHidden;
                 if (isHidden)
@@ -628,7 +653,7 @@ internal class Terminal_Patch
             }
             text += "\r\n";
 
-            __instance.terminalNodes.allKeywords.First(node => node.name == "Moons").specialKeywordResult.displayText = text;
+            terminal.terminalNodes.allKeywords.First(node => node.name == "Moons").specialKeywordResult.displayText = text;
         }
         catch (Exception ex)
         {

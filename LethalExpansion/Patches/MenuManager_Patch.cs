@@ -5,22 +5,6 @@ namespace LethalExpansionCore.Patches;
 [HarmonyPatch(typeof(MenuManager))]
 internal class MenuManager_Patch
 {
-    [HarmonyPatch(nameof(MenuManager.StartHosting))]
-    [HarmonyPostfix]
-    public static void StartHosting_Postfix(MenuManager __instance)
-    {
-        LethalExpansion.sessionWaiting = false;
-        LethalExpansion.Log.LogInfo("LethalExpansion Host Started.");
-    }
-
-    [HarmonyPatch(nameof(MenuManager.StartAClient))]
-    [HarmonyPostfix]
-    public static void StartAClient_Postfix(MenuManager __instance)
-    {
-        LethalExpansion.sessionWaiting = false;
-        LethalExpansion.Log.LogInfo("LethalExpansion LAN Client Started.");
-    }
-
     [HarmonyPatch("Awake")]
     [HarmonyPostfix]
     public static void Awake_Postfix(MenuManager __instance)

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using LethalExpansionCore.Utils;
 using LethalSDK.ScriptableObjects;
 using LethalSDK.Utils;
+using LethalSDK.Component;
 using LethalExpansionCore.MonoBehaviours;
 using LethalExpansionCore.Netcode;
 
@@ -202,7 +203,7 @@ internal class GameNetworkManager_Patch
             {
                 foreach (NetworkObject networkObject in moon.MainPrefab.GetComponentsInChildren<NetworkObject>())
                 {
-                    LethalSDK.Component.SI_EntranceTeleport teleport = networkObject.GetComponent<LethalSDK.Component.SI_EntranceTeleport>();
+                    SI_EntranceTeleport teleport = networkObject.GetComponent<SI_EntranceTeleport>();
                     if (!teleport)
                     {
                         continue;
