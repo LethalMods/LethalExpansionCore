@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using BepInEx.Configuration;
 using HarmonyLib;
 using LethalExpansionCore.Patches;
+using LethalExpansionCore.MonoBehaviours;
 using LethalExpansionCore.Utils;
 using System;
 using System.Linq;
@@ -16,6 +17,8 @@ using DunGen;
 using DunGen.Adapters;
 using LethalSDK.Utils;
 using System.IO;
+using System.Threading.Tasks;
+using LethalSDK.Component;
 
 namespace LethalExpansionCore;
 
@@ -364,7 +367,69 @@ public class LethalExpansion : BaseUnityPlugin
         rigidbody.collisionDetectionMode = CollisionDetectionMode.Continuous;
 
         SceneManager.MoveGameObjectToScene(outOfBounds, scene);
+
+        // BIG HACK. Workaround for how LethalLevelLoader finds the entrances :')
+        // it expects all the EntranceTeleports to be in the same scene as the moon.
+        // 
+        // TODO: Figure out if it's necessary to wait for them or if they will always
+        // be available at this point. I am not familiar enough with Unity's network
+        // system to feel comfortable skipping the whole waiting part so I am doing it
+        // this way to ensure there won't be any issues for players with high latency.
+        WaitForEntrancesSync(scene).GetAwaiter();
+
+        EntranceTeleport[] entranceTeleports = UnityEngine.GameObject.FindObjectsOfType<EntranceTeleport>();
+        LethalExpansion.Log.LogInfo($"Moving {entranceTeleports.Length} EntranceTeleport(s) to scene");
+        foreach (EntranceTeleport entranceTeleport in entranceTeleports)
+        {
+            SceneManager.MoveGameObjectToScene(entranceTeleport.gameObject, scene);
+        }
     }
+
+    private async Task WaitForEntrancesSync(Scene scene)
+    {
+        int expectedEntranceTeleports = 0;
+        foreach (GameObject root in scene.GetRootGameObjects())
+        {
+            foreach (LECore_InactiveNetworkPrefabInstancier instancier in root.GetComponentsInChildren<LECore_InactiveNetworkPrefabInstancier>(true))
+            {
+                if (instancier.prefab?.GetComponent<SI_EntranceTeleport>() == null)
+                {
+                    continue;
+                }
+
+                expectedEntranceTeleports++;
+            }
+        }
+
+        LethalExpansion.Log.LogInfo($"Expecting {expectedEntranceTeleports} EntranceTeleports");
+
+        if (expectedEntranceTeleports == 0)
+        {
+            return;
+        }
+
+        // 2 seconds
+        double maxSyncTime = 2;
+        double timeStarted = Time.timeAsDouble;
+        do
+        {
+            EntranceTeleport[] entranceTeleports = UnityEngine.GameObject.FindObjectsOfType<EntranceTeleport>();
+            if (entranceTeleports.Length == expectedEntranceTeleports)
+            {
+                LethalExpansion.Log.LogInfo($"EntranceTeleports was synced in {(Time.timeAsDouble - timeStarted) * 1000}ms");
+                return;
+            }
+
+            if (Time.timeAsDouble - timeStarted > maxSyncTime)
+            {
+                LethalExpansion.Log.LogWarning("Failed to sync EntranceTeleports in time, this may have unintended consequences");
+                return;
+            }
+
+            await Task.Delay(25);
+        } while (true);
+    }
+
     private GameObject CreateDungeonGenerator()
     {
         GameObject dungeonGenerator = new GameObject();
