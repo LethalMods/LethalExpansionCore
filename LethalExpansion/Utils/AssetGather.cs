@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Audio;
@@ -94,6 +95,16 @@ public class AssetGather
         {
             LethalExpansion.Log.LogInfo(item.Key);
         }
+    }
+
+    public AudioMixerGroup GetDiageticMasterAudioMixer()
+    {
+        if (!audioMixers.TryGetValue("Diagetic", out var tuple))
+        {
+            return null;
+        }
+
+        return tuple.Item2.First(a => a.name == "Master");
     }
 
     #region Audio Clips

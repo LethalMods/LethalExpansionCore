@@ -20,44 +20,32 @@ internal class GameNetworkManager_Patch
     [HarmonyPrefix]
     static void Start_Prefix(GameNetworkManager __instance)
     {
-        AssetBank mainBank = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<ModManifest>("Assets/Mods/LethalExpansion/modmanifest.asset").assetBank;
-        if (mainBank != null)
-        {
-            foreach (PrefabInfoPair networkPrefab in mainBank.NetworkPrefabs())
-            {
-                string prefabPath = networkPrefab.PrefabPath;
-                if (string.IsNullOrEmpty(prefabPath))
-                {
-                    continue;
-                }
+        AssetBundle mainAssetBundle = AssetBundlesManager.Instance.mainAssetBundle;
+        ModManifest mainManifest = mainAssetBundle.LoadAsset<ModManifest>("Assets/Mods/LethalExpansion/modmanifest.asset");
 
-                GameObject prefab = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<GameObject>(networkPrefab.PrefabPath);
-                __instance.GetComponent<NetworkManager>().PrefabHandler.AddNetworkPrefab(prefab);
-                LethalExpansion.Log.LogInfo($"Registered prefab '{networkPrefab.PrefabName}'");
+        LoadNetworkPrefabs(__instance, mainAssetBundle, mainManifest, true);
+
+        Sprite scrapSprite = mainAssetBundle.LoadAsset<Sprite>("Assets/Mods/LethalExpansion/Sprites/ScrapItemIcon2.png");
+        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
+        {
+            (AssetBundle assetBundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
+
+            if (assetBundle == null || manifest == null)
+            {
+                continue;
             }
-        }
-
-        Sprite scrapSprite = AssetBundlesManager.Instance.mainAssetBundle.LoadAsset<Sprite>("Assets/Mods/LethalExpansion/Sprites/ScrapItemIcon2.png");
-        try
-        {
-            foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
+            
+            try
             {
-                (AssetBundle assetBundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
-
-                if (assetBundle == null || manifest == null)
-                {
-                    continue;
-                }
-
                 LoadScrapPrefabs(__instance, assetBundle, manifest, scrapSprite);
                 LoadNetworkPrefabs(__instance, assetBundle, manifest);
 
                 LoadMoonPrefabs(__instance, assetBundle, manifest);
             }
-        }
-        catch (Exception ex)
-        {
-            LethalExpansion.Log.LogError($"Failed to register AssetBundle prefabs. {ex.Message}");
+            catch (Exception ex)
+            {
+                LethalExpansion.Log.LogError($"Failed to register AssetBundle prefabs for '{manifest.modName}', this may cause issues. {ex.Message}");
+            }
         }
     }
 
@@ -78,21 +66,21 @@ internal class GameNetworkManager_Patch
                 continue;
             }
 
-            InitializeScrap(scrap, scrapSprite);
-
             try
             {
+                InitializeScrap(scrap, scrapSprite);
+
                 prefabHandler.AddNetworkPrefab(scrap.prefab);
-                LethalExpansion.Log.LogInfo($"Registered scrap '{scrap.itemName}'");
+                LethalExpansion.Log.LogInfo($"Registered scrap '{scrap.itemName}' from '{manifest.modName}'");
             }
             catch (Exception ex)
             {
-                LethalExpansion.Log.LogError($"Failed to register scrap '{scrap.itemName}'. {ex.Message}");
+                LethalExpansion.Log.LogError($"Failed to register scrap '{scrap.itemName}' from '{manifest.modName}'. {ex.Message}");
             }
         }
     }
 
-    private static void LoadNetworkPrefabs(GameNetworkManager networkManager, AssetBundle assetBundle, ModManifest manifest)
+    private static void LoadNetworkPrefabs(GameNetworkManager networkManager, AssetBundle assetBundle, ModManifest manifest, bool allowIllegalComponents = false)
     {
         PrefabInfoPair[] networkPrefabs = manifest.assetBank?.NetworkPrefabs();
         if (networkPrefabs == null || networkPrefabs.Length == 0)
@@ -115,62 +103,66 @@ internal class GameNetworkManager_Patch
             // Is it necessary for it to be loaded again? I am going to guess no and hope it doesn't break anything
             // ComponentWhitelist.CheckAndRemoveIllegalComponents(bundleKeyValue.Value.Item1.LoadAsset<GameObject>(prefabPath).transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
 
-            ComponentWhitelist.CheckAndRemoveIllegalComponents(prefab.transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
+            if (!allowIllegalComponents)
+            {
+                ComponentWhitelist.CheckAndRemoveIllegalComponents(prefab.transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
+            }
+            
             prefabHandler.AddNetworkPrefab(prefab);
 
-            LethalExpansion.Log.LogInfo($"Registered prefab '{networkPrefab.PrefabName}'");
+            LethalExpansion.Log.LogInfo($"Registered prefab '{networkPrefab.PrefabName}' from '{manifest.modName}'");
         }
     }
 
-    private static void InitializeScrap(Scrap newScrap, Sprite scrapSprite)
+    private static void InitializeScrap(Scrap scrap, Sprite scrapSprite)
     {
-        Item scrapItem = ScriptableObject.CreateInstance<Item>();
-        scrapItem.name = newScrap.name;
-        scrapItem.itemName = newScrap.itemName;
-        scrapItem.canBeGrabbedBeforeGameStart = true;
-        scrapItem.isScrap = true;
-        scrapItem.minValue = newScrap.minValue;
-        scrapItem.maxValue = newScrap.maxValue;
-        scrapItem.weight = (float)newScrap.weight / 100 + 1;
+        Item item = ScriptableObject.CreateInstance<Item>();
+        item.name = scrap.name;
+        item.itemName = scrap.itemName;
+        item.canBeGrabbedBeforeGameStart = true;
+        item.isScrap = true;
+        item.minValue = scrap.minValue;
+        item.maxValue = scrap.maxValue;
+        item.weight = (float)scrap.weight / 100 + 1;
 
-        ComponentWhitelist.CheckAndRemoveIllegalComponents(newScrap.prefab.transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
-        scrapItem.spawnPrefab = newScrap.prefab;
+        ComponentWhitelist.CheckAndRemoveIllegalComponents(scrap.prefab.transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
+        item.spawnPrefab = scrap.prefab;
 
-        scrapItem.twoHanded = newScrap.twoHanded;
-        scrapItem.twoHandedAnimation = newScrap.twoHandedAnimation;
-        scrapItem.requiresBattery = newScrap.requiresBattery;
-        scrapItem.isConductiveMetal = newScrap.isConductiveMetal;
+        item.twoHanded = scrap.twoHanded;
+        item.twoHandedAnimation = scrap.twoHandedAnimation;
+        item.requiresBattery = scrap.requiresBattery;
+        item.isConductiveMetal = scrap.isConductiveMetal;
 
-        scrapItem.itemIcon = scrapSprite;
-        scrapItem.syncGrabFunction = false;
-        scrapItem.syncUseFunction = false;
-        scrapItem.syncDiscardFunction = false;
-        scrapItem.syncInteractLRFunction = false;
-        scrapItem.verticalOffset = newScrap.verticalOffset;
-        scrapItem.restingRotation = newScrap.restingRotation;
-        scrapItem.positionOffset = newScrap.positionOffset;
-        scrapItem.rotationOffset = newScrap.rotationOffset;
-        scrapItem.meshOffset = false;
-        scrapItem.meshVariants = newScrap.meshVariants;
-        scrapItem.materialVariants = newScrap.materialVariants;
-        scrapItem.canBeInspected = false;
+        item.itemIcon = scrapSprite;
+        item.syncGrabFunction = false;
+        item.syncUseFunction = false;
+        item.syncDiscardFunction = false;
+        item.syncInteractLRFunction = false;
+        item.verticalOffset = scrap.verticalOffset;
+        item.restingRotation = scrap.restingRotation;
+        item.positionOffset = scrap.positionOffset;
+        item.rotationOffset = scrap.rotationOffset;
+        item.meshOffset = false;
+        item.meshVariants = scrap.meshVariants;
+        item.materialVariants = scrap.materialVariants;
+        item.canBeInspected = false;
 
-        PhysicsProp physicsProp = newScrap.prefab.AddComponent<PhysicsProp>();
+        PhysicsProp physicsProp = scrap.prefab.AddComponent<PhysicsProp>();
         physicsProp.grabbable = true;
-        physicsProp.itemProperties = scrapItem;
-        physicsProp.mainObjectRenderer = newScrap.prefab.GetComponent<MeshRenderer>();
+        physicsProp.itemProperties = item;
+        physicsProp.mainObjectRenderer = scrap.prefab.GetComponent<MeshRenderer>();
 
-        AudioSource audioSource = newScrap.prefab.AddComponent<AudioSource>();
+        AudioSource audioSource = scrap.prefab.AddComponent<AudioSource>();
         audioSource.playOnAwake = false;
         audioSource.spatialBlend = 1f;
 
-        Transform scanNodeObject = newScrap.prefab.transform.Find("ScanNode");
+        Transform scanNodeObject = scrap.prefab.transform.Find("ScanNode");
         if (scanNodeObject != null)
         {
             ScanNodeProperties scanNode = scanNodeObject.gameObject.AddComponent<ScanNodeProperties>();
             scanNode.maxRange = 13;
             scanNode.minRange = 1;
-            scanNode.headerText = newScrap.itemName;
+            scanNode.headerText = scrap.itemName;
             scanNode.subText = "Value: ";
             scanNode.nodeType = 2;
         }
@@ -201,45 +193,50 @@ internal class GameNetworkManager_Patch
 
             try
             {
-                foreach (NetworkObject networkObject in moon.MainPrefab.GetComponentsInChildren<NetworkObject>())
-                {
-                    SI_EntranceTeleport teleport = networkObject.GetComponent<SI_EntranceTeleport>();
-                    if (!teleport)
-                    {
-                        continue;
-                    }
+                InitializeMoon(moon, prefabHandler);
 
-                    GameObject gameObject = networkObject.gameObject;
-                    // Sync BoxCollider bounds. For some reason it does not
-                    // have the proper bounds when it's instantiated on the
-                    // client which can sometimes cause the entrance to be
-                    // inaccessible (on Aquatis for instance).
-                    //
-                    // Syncing it with a NetworkTransform might be a bit hacky
-                    // but it will do until I can figure out the root cause of
-                    // the desync, though this entire solution feels a bit hacky
-                    // to be honest.
-                    gameObject.AddComponent<NetworkTransform>();
-                    gameObject.SetActive(false);
-
-                    GameObject parent = gameObject.transform.parent.gameObject;
-
-                    GameObject instancier = new GameObject("NetworkPrefabInstancier");
-                    instancier.transform.parent = parent.transform;
-                    instancier.transform.position = gameObject.transform.position;
-                    instancier.transform.rotation = gameObject.transform.rotation;
-
-                    instancier.AddComponent<LECore_InactiveNetworkPrefabInstancier>().prefab = gameObject;
-
-                    prefabHandler.AddHandler(gameObject, new InactiveNetworkPrefabInstanceHandler(gameObject));
-                }
-
-                LethalExpansion.Log.LogInfo($"Registered moon '{moon.MoonName}'");
+                LethalExpansion.Log.LogInfo($"Registered moon '{moon.MoonName}' from '{manifest.modName}'");
             }
             catch (Exception ex)
             {
-                LethalExpansion.Log.LogError($"Failed to register moon '{moon.MoonName}'. {ex}");
+                LethalExpansion.Log.LogError($"Failed to register moon '{moon.MoonName}' from '{manifest.modName}'. {ex}");
             }
+        }
+    }
+
+    private static void InitializeMoon(Moon moon, NetworkPrefabHandler prefabHandler)
+    {
+        foreach (NetworkObject networkObject in moon.MainPrefab.GetComponentsInChildren<NetworkObject>())
+        {
+            SI_EntranceTeleport teleport = networkObject.GetComponent<SI_EntranceTeleport>();
+            if (!teleport)
+            {
+                continue;
+            }
+
+            GameObject gameObject = networkObject.gameObject;
+            // Sync BoxCollider bounds. For some reason it does not
+            // have the proper bounds when it's instantiated on the
+            // client which can sometimes cause the entrance to be
+            // inaccessible (on Aquatis for instance).
+            //
+            // Syncing it with a NetworkTransform might be a bit hacky
+            // but it will do until I can figure out the root cause of
+            // the desync, though this entire solution feels a bit hacky
+            // to be honest.
+            gameObject.AddComponent<NetworkTransform>();
+            gameObject.SetActive(false);
+
+            GameObject parent = gameObject.transform.parent.gameObject;
+
+            GameObject instancier = new GameObject("NetworkPrefabInstancier");
+            instancier.transform.parent = parent.transform;
+            instancier.transform.position = gameObject.transform.position;
+            instancier.transform.rotation = gameObject.transform.rotation;
+
+            instancier.AddComponent<LECore_InactiveNetworkPrefabInstancier>().prefab = gameObject;
+
+            prefabHandler.AddHandler(gameObject, new InactiveNetworkPrefabInstanceHandler(gameObject));
         }
     }
 }

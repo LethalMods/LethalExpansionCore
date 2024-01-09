@@ -210,7 +210,7 @@ internal class Terminal_Patch
         Item item = scrap.prefab.GetComponent<PhysicsProp>().itemProperties;
 
         AudioSource audioSource = scrap.prefab.GetComponent<AudioSource>();
-        audioSource.outputAudioMixerGroup = AssetGather.Instance.audioMixers.ContainsKey("Diagetic") ? AssetGather.Instance.audioMixers["Diagetic"].Item2.First(a => a.name == "Master") : null;
+        audioSource.outputAudioMixerGroup = AssetGather.Instance.GetDiageticMasterAudioMixer();
 
         AudioClip grabSfx = null;
         if (scrap.grabSFX.Length > 0 && AssetGather.Instance.audioClips.ContainsKey(scrap.grabSFX))

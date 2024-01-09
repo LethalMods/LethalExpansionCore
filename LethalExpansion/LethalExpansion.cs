@@ -12,7 +12,6 @@ using UnityEngine;
 using UnityEngine.Rendering;
 using UnityEngine.Rendering.HighDefinition;
 using UnityEngine.SceneManagement;
-using UnityEngine.Audio;
 using DunGen;
 using DunGen.Adapters;
 using LethalSDK.Utils;
@@ -315,19 +314,19 @@ public class LethalExpansion : BaseUnityPlugin
             Transform itemShip = dropShip.transform.Find("ItemShip");
             if (itemShip != null)
             {
-                itemShip.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
+                itemShip.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.GetDiageticMasterAudioMixer();
             }
 
             Transform itemShipMusicClose = dropShip.transform.Find("ItemShip/Music");
             if (itemShipMusicClose != null)
             {
-                itemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
+                itemShipMusicClose.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.GetDiageticMasterAudioMixer();
             }
 
             Transform itemShipMusicFar = dropShip.transform.Find("ItemShip/Music/Music (1)");
             if (itemShipMusicFar != null)
             {
-                itemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
+                itemShipMusicFar.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.GetDiageticMasterAudioMixer();
             }
         }
 
@@ -366,7 +365,6 @@ public class LethalExpansion : BaseUnityPlugin
 
         SceneManager.MoveGameObjectToScene(outOfBounds, scene);
     }
-
     private GameObject CreateDungeonGenerator()
     {
         GameObject dungeonGenerator = new GameObject();
@@ -386,16 +384,6 @@ public class LethalExpansion : BaseUnityPlugin
         dungeonNavMesh.LayerMask = 35072; // 256 + 2048 + 32768 = 35072 (What does each of these correspond to?)
 
         return dungeonGenerator;
-    }
-
-    private AudioMixerGroup GetDiageticMasterAudioMixer()
-    {
-        if (!AssetGather.Instance.audioMixers.TryGetValue("Diagetic", out var tuple))
-        {
-            return null;
-        }
-
-        return tuple.Item2.First(a => a.name == "Master");
     }
 
     private void LoadCustomMoon(Scene scene)
@@ -419,7 +407,7 @@ public class LethalExpansion : BaseUnityPlugin
         Transform diageticBackground = mainPrefab.transform.Find("Systems/Audio/DiageticBackground");
         if (diageticBackground != null)
         {
-            diageticBackground.GetComponent<AudioSource>().outputAudioMixerGroup = GetDiageticMasterAudioMixer();
+            diageticBackground.GetComponent<AudioSource>().outputAudioMixerGroup = AssetGather.Instance.GetDiageticMasterAudioMixer();
         }
 
         Terrain[] terrains = mainPrefab.GetComponentsInChildren<Terrain>();
