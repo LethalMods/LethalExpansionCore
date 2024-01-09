@@ -18,6 +18,8 @@ The default modules from LethalExpansion are also available in a separate packag
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
 
 ## Changes
+* 1.3.9
+	* LethalLevelLoader compatibility hotfix
 * 1.3.8
 	* Fixed dungeon desync in online mode which caused players to fall into the void or have a different dungeon layout than the host
 	* Fixed fire exits not working properly when the map is misconfigured and has duplicate entrance ids, it will no longer generate fire exits for entrances which has an id of another entrance
