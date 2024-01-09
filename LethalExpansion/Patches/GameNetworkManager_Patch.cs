@@ -129,9 +129,12 @@ internal class GameNetworkManager_Patch
         item.spawnPrefab = scrap.prefab;
 
         item.twoHanded = scrap.twoHanded;
-        item.twoHandedAnimation = scrap.twoHandedAnimation;
         item.requiresBattery = scrap.requiresBattery;
         item.isConductiveMetal = scrap.isConductiveMetal;
+
+        (bool twoHandedAnimation, string grabAnimation) = GetGrabAnimation(scrap);
+        item.twoHandedAnimation = twoHandedAnimation;
+        item.grabAnim = grabAnimation;
 
         item.itemIcon = scrapSprite;
         item.syncGrabFunction = false;
@@ -165,6 +168,25 @@ internal class GameNetworkManager_Patch
             scanNode.headerText = scrap.itemName;
             scanNode.subText = "Value: ";
             scanNode.nodeType = 2;
+        }
+    }
+
+    private static (bool, string) GetGrabAnimation(Scrap scrap)
+    {
+        switch (scrap.HandedAnimation)
+        {
+            case GrabAnim.OneHanded:
+                return (false, string.Empty);
+            case GrabAnim.TwoHanded:
+                return (true, "HoldLung");
+            case GrabAnim.Shotgun:
+                return (true, "HoldShotgun");
+            case GrabAnim.Jetpack:
+                return (true, "HoldJetpack");
+            case GrabAnim.Clipboard:
+                return (false, "GrabClipboard");
+            default:
+                return (false, string.Empty);
         }
     }
 
