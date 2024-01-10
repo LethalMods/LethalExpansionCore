@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using System;
+using System.Linq;
 using Unity.Netcode;
 using Unity.Netcode.Components;
 using UnityEngine;
@@ -10,6 +11,8 @@ using LethalSDK.Utils;
 using LethalSDK.Component;
 using LethalExpansionCore.MonoBehaviours;
 using LethalExpansionCore.Netcode;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace LethalExpansionCore.Patches;
 
@@ -226,14 +229,56 @@ internal class GameNetworkManager_Patch
         }
     }
 
+    // Thanks Xilophor
+    private static NetworkObject AddNetworkObject(GameObject gameObject)
+    {
+        List<NetworkPrefab> networkPrefabs = Traverse.Create(NetworkManager.Singleton.NetworkConfig.Prefabs)
+            .Field("m_Prefabs")
+            .GetValue<List<NetworkPrefab>>();
+
+        uint unusedId = networkPrefabs
+            .First(i => networkPrefabs.Any(x => x.SourcePrefabGlobalObjectIdHash != i.SourcePrefabGlobalObjectIdHash + 1))
+            .SourcePrefabGlobalObjectIdHash + 1;
+
+        return AddNetworkObject(gameObject, unusedId);
+    }
+
+    private static NetworkObject AddNetworkObject(GameObject gameObject, string uniqueIdentifier)
+    {
+        uint id = BitConverter.ToUInt32(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(uniqueIdentifier)), 0);
+        return AddNetworkObject(gameObject, id);
+    }
+
+    private static NetworkObject AddNetworkObject(GameObject gameObject, uint id)
+    {
+        NetworkObject networkObject = gameObject.AddComponent<NetworkObject>();
+
+        Traverse.Create(networkObject)
+            .Field("GlobalObjectIdHash")
+            .SetValue(id);
+
+        LethalExpansion.Log.LogInfo($"Added NetworkObject with id '{id}' to '{gameObject}'");
+        return networkObject;
+    }
+
     private static void InitializeMoon(Moon moon, NetworkPrefabHandler prefabHandler)
     {
-        foreach (NetworkObject networkObject in moon.MainPrefab.GetComponentsInChildren<NetworkObject>())
+        // TODO: We can solve this in a better way
+        // now that I know how to create NetworkObjects
+        // at runtime.
+
+        foreach (SI_EntranceTeleport teleport in moon.MainPrefab.GetComponentsInChildren<SI_EntranceTeleport>())
         {
-            SI_EntranceTeleport teleport = networkObject.GetComponent<SI_EntranceTeleport>();
-            if (!teleport)
+            NetworkObject networkObject = teleport.GetComponent<NetworkObject>();
+            if (!networkObject)
             {
-                continue;
+                if (teleport.GetComponentInParent<NetworkObject>())
+                {
+                    continue;
+                }
+
+                LethalExpansion.Log.LogInfo($"Adding missing NetworkObject to EntranceTeleport '{teleport.gameObject}' to fix desync issue");
+                networkObject = AddNetworkObject(teleport.gameObject, $"{moon.MoonName}_{teleport.gameObject.name}_{teleport.EntranceID}_{teleport.EntrancePoint.position}");
             }
 
             GameObject gameObject = networkObject.gameObject;
@@ -258,6 +303,7 @@ internal class GameNetworkManager_Patch
 
             instancier.AddComponent<LECore_InactiveNetworkPrefabInstancier>().prefab = gameObject;
 
+            prefabHandler.AddNetworkPrefab(gameObject);
             prefabHandler.AddHandler(gameObject, new InactiveNetworkPrefabInstanceHandler(gameObject));
         }
     }
