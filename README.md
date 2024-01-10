@@ -18,6 +18,9 @@ The default modules from LethalExpansion are also available in a separate packag
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
 
 ## Changes
+* 1.3.11
+	* Full support for the latest LethalSDK version
+	* Fixed custom scrap not always spawning on custom moons
 * 1.3.10
 	* Fixed moons with misconfigured entrances not loading properly
 	* Fixed entrance desync on moons with misconfigured entrances
