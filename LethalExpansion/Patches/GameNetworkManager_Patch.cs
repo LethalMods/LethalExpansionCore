@@ -28,6 +28,13 @@ internal class GameNetworkManager_Patch
 
         LoadNetworkPrefabs(__instance, mainAssetBundle, mainManifest, true);
 
+        // If we don't ensure that each prefab is only used for one scrap
+        // we will have issues with components, which were added by us, being
+        // removed because they are not whitelisted.
+        //
+        // See usage of ComponentWhitelist.CheckAndRemoveIllegalComponents
+        List<GameObject> usedScrapPrefabs = new List<GameObject>();
+
         Sprite scrapSprite = mainAssetBundle.LoadAsset<Sprite>("Assets/Mods/LethalExpansion/Sprites/ScrapItemIcon2.png");
         foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.assetBundles)
         {
@@ -40,7 +47,7 @@ internal class GameNetworkManager_Patch
             
             try
             {
-                LoadScrapPrefabs(__instance, assetBundle, manifest, scrapSprite);
+                LoadScrapPrefabs(__instance, assetBundle, manifest, scrapSprite, usedScrapPrefabs);
                 LoadNetworkPrefabs(__instance, assetBundle, manifest);
 
                 LoadMoonPrefabs(__instance, assetBundle, manifest);
@@ -52,7 +59,7 @@ internal class GameNetworkManager_Patch
         }
     }
 
-    private static void LoadScrapPrefabs(GameNetworkManager networkManager, AssetBundle assetBundle, ModManifest manifest, Sprite scrapSprite)
+    private static void LoadScrapPrefabs(GameNetworkManager networkManager, AssetBundle assetBundle, ModManifest manifest, Sprite scrapSprite, List<GameObject> usedPrefabs)
     {
         Scrap[] scraps = manifest.scraps;
         if (scraps == null || scraps.Length == 0)
@@ -69,16 +76,23 @@ internal class GameNetworkManager_Patch
                 continue;
             }
 
+            if (usedPrefabs.Any(prefab => ReferenceEquals(prefab, scrap.prefab)))
+            {
+                LethalExpansion.Log.LogWarning($"Prefab used by scrap '{scrap.itemName}' from '{manifest.modName}' is already in use by another scrap");
+                continue;
+            }
+
+            usedPrefabs.Add(scrap.prefab);
+
             try
             {
-                InitializeScrap(scrap, scrapSprite);
-
+                VanillaItemInstancier.AddItemToScrap(scrap, scrapSprite);
                 prefabHandler.AddNetworkPrefab(scrap.prefab);
                 LethalExpansion.Log.LogInfo($"Registered scrap '{scrap.itemName}' from '{manifest.modName}'");
             }
             catch (Exception ex)
             {
-                LethalExpansion.Log.LogError($"Failed to register scrap '{scrap.itemName}' from '{manifest.modName}'. {ex.Message}");
+                LethalExpansion.Log.LogError($"Failed to register scrap '{scrap.itemName}' from '{manifest.modName}'. {ex}");
             }
         }
     }
@@ -114,82 +128,6 @@ internal class GameNetworkManager_Patch
             prefabHandler.AddNetworkPrefab(prefab);
 
             LethalExpansion.Log.LogInfo($"Registered prefab '{networkPrefab.PrefabName}' from '{manifest.modName}'");
-        }
-    }
-
-    private static void InitializeScrap(Scrap scrap, Sprite scrapSprite)
-    {
-        Item item = ScriptableObject.CreateInstance<Item>();
-        item.name = scrap.name;
-        item.itemName = scrap.itemName;
-        item.canBeGrabbedBeforeGameStart = true;
-        item.isScrap = true;
-        item.minValue = scrap.minValue;
-        item.maxValue = scrap.maxValue;
-        item.weight = (float)scrap.weight / 100 + 1;
-
-        ComponentWhitelist.CheckAndRemoveIllegalComponents(scrap.prefab.transform, ComponentWhitelist.ScrapPrefabComponentWhitelist);
-        item.spawnPrefab = scrap.prefab;
-
-        item.twoHanded = scrap.twoHanded;
-        item.requiresBattery = scrap.requiresBattery;
-        item.isConductiveMetal = scrap.isConductiveMetal;
-
-        (bool twoHandedAnimation, string grabAnimation) = GetGrabAnimation(scrap);
-        item.twoHandedAnimation = twoHandedAnimation;
-        item.grabAnim = grabAnimation;
-
-        item.itemIcon = scrapSprite;
-        item.syncGrabFunction = false;
-        item.syncUseFunction = false;
-        item.syncDiscardFunction = false;
-        item.syncInteractLRFunction = false;
-        item.verticalOffset = scrap.verticalOffset;
-        item.restingRotation = scrap.restingRotation;
-        item.positionOffset = scrap.positionOffset;
-        item.rotationOffset = scrap.rotationOffset;
-        item.meshOffset = false;
-        item.meshVariants = scrap.meshVariants;
-        item.materialVariants = scrap.materialVariants;
-        item.canBeInspected = false;
-
-        PhysicsProp physicsProp = scrap.prefab.AddComponent<PhysicsProp>();
-        physicsProp.grabbable = true;
-        physicsProp.itemProperties = item;
-        physicsProp.mainObjectRenderer = scrap.prefab.GetComponent<MeshRenderer>();
-
-        AudioSource audioSource = scrap.prefab.AddComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 1f;
-
-        Transform scanNodeObject = scrap.prefab.transform.Find("ScanNode");
-        if (scanNodeObject != null)
-        {
-            ScanNodeProperties scanNode = scanNodeObject.gameObject.AddComponent<ScanNodeProperties>();
-            scanNode.maxRange = 13;
-            scanNode.minRange = 1;
-            scanNode.headerText = scrap.itemName;
-            scanNode.subText = "Value: ";
-            scanNode.nodeType = 2;
-        }
-    }
-
-    private static (bool, string) GetGrabAnimation(Scrap scrap)
-    {
-        switch (scrap.HandedAnimation)
-        {
-            case GrabAnim.OneHanded:
-                return (false, string.Empty);
-            case GrabAnim.TwoHanded:
-                return (true, "HoldLung");
-            case GrabAnim.Shotgun:
-                return (true, "HoldShotgun");
-            case GrabAnim.Jetpack:
-                return (true, "HoldJetpack");
-            case GrabAnim.Clipboard:
-                return (false, "GrabClipboard");
-            default:
-                return (false, string.Empty);
         }
     }
 

@@ -362,6 +362,8 @@
     <Compile Include="Utils\AssetBundlesManager.cs" />
     <Compile Include="Utils\AssetGather.cs" />
     <Compile Include="Utils\ComponentWhitelist.cs" />
+    <Compile Include="Utils\VanillaAssetGatherer.cs" />
+    <Compile Include="Utils\VanillaItemInstancier.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

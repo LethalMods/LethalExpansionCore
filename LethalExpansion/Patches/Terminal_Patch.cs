@@ -51,7 +51,8 @@ internal class Terminal_Patch
         GatherAssets();
         AddScraps();
         AddMoons();
-        // TODO: Apply scrap spawn chance again for the new moons
+        // Apply scrap spawn chance again for the new moons
+        UpdateAllScrapSpawnRate();
 
         LethalExpansion.Log.LogInfo("Finished adding moons and scrap");
     }
@@ -82,31 +83,7 @@ internal class Terminal_Patch
             return;
         }
 
-        foreach (Item item in StartOfRound.Instance.allItemsList.itemsList)
-        {
-            AssetGather.Instance.AddAudioClip(item.grabSFX);
-            AssetGather.Instance.AddAudioClip(item.dropSFX);
-            AssetGather.Instance.AddAudioClip(item.pocketSFX);
-            AssetGather.Instance.AddAudioClip(item.throwSFX);
-        }
-
-        AssetGather.Instance.AddSprites(GameObject.Find("Environment/HangarShip/StartGameLever").GetComponent<InteractTrigger>().hoverIcon);
-        AssetGather.Instance.AddSprites(GameObject.Find("Environment/HangarShip/Terminal/TerminalTrigger/TerminalScript").GetComponent<InteractTrigger>().hoverIcon);
-        AssetGather.Instance.AddSprites(GameObject.Find("Environment/HangarShip/OutsideShipRoom/Ladder/LadderTrigger").GetComponent<InteractTrigger>().hoverIcon);
-
-        foreach (SelectableLevel level in StartOfRound.Instance.levels)
-        {
-            AssetGather.Instance.AddPlanetPrefabs(level.planetPrefab);
-            AssetGather.Instance.AddLevelAmbiances(level.levelAmbienceClips);
-
-            level.spawnableMapObjects.ToList().ForEach(e => AssetGather.Instance.AddMapObjects(e.prefabToSpawn));
-            level.spawnableOutsideObjects.ToList().ForEach(e => AssetGather.Instance.AddOutsideObject(e.spawnableObject));
-            level.spawnableScrap.ForEach(e => AssetGather.Instance.AddScrap(e.spawnableItem));
-
-            level.Enemies.ForEach(e => AssetGather.Instance.AddEnemies(e.enemyType));
-            level.OutsideEnemies.ForEach(e => AssetGather.Instance.AddEnemies(e.enemyType));
-            level.DaytimeEnemies.ForEach(e => AssetGather.Instance.AddEnemies(e.enemyType));
-        }
+        VanillaAssetGatherer.GatherAssets();
 
         foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
@@ -145,7 +122,7 @@ internal class Terminal_Patch
             }
             catch (Exception ex)
             {
-                LethalExpansion.Log.LogError($"Failed to collect AssetBundle prefabs. {ex.Message}");
+                LethalExpansion.Log.LogError($"Failed to collect prefabs from AssetBundle '{manifest.modName}'. {ex.Message}");
             }
         }
 
@@ -164,8 +141,6 @@ internal class Terminal_Patch
             return;
         }
 
-        AudioClip defaultDropSound = AssetGather.Instance.audioClips["DropCan"];
-        AudioClip defaultGrabSound = AssetGather.Instance.audioClips["ShovelPickUp"];
         foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
@@ -190,8 +165,8 @@ internal class Terminal_Patch
 
                 try
                 {
-                    Item item = CreateScrapItem(scrap, defaultGrabSound, defaultDropSound);
-                    AddScrap(scrap, item);
+                    VanillaItemInstancier.UpdateAudio(scrap);
+                    AddScrap(scrap);
 
                     LethalExpansion.Log.LogInfo($"Added scrap '{scrap.itemName}'");
                 }
@@ -205,37 +180,37 @@ internal class Terminal_Patch
         scrapsPatched = true;
     }
 
-    public static Item CreateScrapItem(Scrap scrap, AudioClip defaultGrabSound, AudioClip defaultDropSound)
+    public static void UpdateAllScrapSpawnRate()
     {
-        Item item = scrap.prefab.GetComponent<PhysicsProp>().itemProperties;
-
-        AudioSource audioSource = scrap.prefab.GetComponent<AudioSource>();
-        audioSource.outputAudioMixerGroup = AssetGather.Instance.GetDiageticMasterAudioMixer();
-
-        AudioClip grabSfx = null;
-        if (scrap.grabSFX.Length > 0 && AssetGather.Instance.audioClips.ContainsKey(scrap.grabSFX))
+        foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
-            grabSfx = AssetGather.Instance.audioClips[scrap.grabSFX];
-        }
-        item.grabSFX = grabSfx ?? defaultGrabSound;
+            (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
 
-        AudioClip dropSfx = null;
-        if (scrap.dropSFX.Length > 0 && AssetGather.Instance.audioClips.ContainsKey(scrap.dropSFX))
-        {
-            dropSfx = AssetGather.Instance.audioClips[scrap.dropSFX];
-        }
-        item.dropSFX = dropSfx ?? defaultDropSound;
+            if (bundle == null || manifest == null || manifest.scraps == null)
+            {
+                continue;
+            }
 
-        return item;
+            foreach (Scrap scrap in manifest.scraps)
+            {
+                UpdateScrapSpawnRate(scrap);
+            }
+        }
     }
 
-    public static void AddScrap(Scrap scrap, Item item)
+    public static void UpdateScrapSpawnRate(Scrap scrap)
     {
-        SpawnableItemWithRarity GetSpawnableItem(SelectableLevel level)
+        Item item = VanillaItemInstancier.GetItem(scrap);
+        if (item == null)
+        {
+            return;
+        }
+
+        int? GetSpawnableItemRarity(SelectableLevel level)
         {
             if (scrap.useGlobalSpawnWeight)
             {
-                return new SpawnableItemWithRarity { spawnableItem = item, rarity = scrap.globalSpawnWeight };
+                return scrap.globalSpawnWeight;
             }
 
             ScrapSpawnChancePerScene[] perPlanetSpawnWeight = scrap.perPlanetSpawnWeight();
@@ -247,26 +222,52 @@ internal class Terminal_Patch
             }
 
             ScrapSpawnChancePerScene scrapSpawnChance = perPlanetSpawnWeight.First(l => l.SceneName == level.PlanetName);
-            return new SpawnableItemWithRarity { spawnableItem = item, rarity = scrapSpawnChance.SpawnWeight };
+            return scrapSpawnChance.SpawnWeight;
         }
-
-        StartOfRound.Instance.allItemsList.itemsList.Add(item);
 
         foreach (SelectableLevel level in StartOfRound.Instance.levels)
         {
             try
             {
-                SpawnableItemWithRarity spawnableItem = GetSpawnableItem(level);
-                if (spawnableItem != null)
+                int? spawnableItemRarity = GetSpawnableItemRarity(level);
+                if (spawnableItemRarity == null)
                 {
-                    level.spawnableScrap.Add(spawnableItem);
+                    continue;
                 }
+
+                UpdateOrAddItemSpawnRate(level, item, spawnableItemRarity.Value);
             }
             catch (Exception ex)
             {
                 LethalExpansion.Log.LogError($"Failed to add scrap '{scrap.itemName}' spawn chance to moon '{level.PlanetName}'. {ex.Message}");
             }
         }
+    }
+
+    public static void UpdateOrAddItemSpawnRate(SelectableLevel level, Item item, int rarity)
+    {
+        int index = level.spawnableScrap.FindIndex(spawnableScrap => spawnableScrap.spawnableItem == item);
+        if (index == -1)
+        {
+            LethalExpansion.DebugLog.LogInfo($"Added new spawn rate '{rarity}' for scrap '{item.itemName}' on moon '{level.PlanetName}'");
+            level.spawnableScrap.Add(new SpawnableItemWithRarity() { spawnableItem = item, rarity = rarity });
+        }
+        else
+        {
+            SpawnableItemWithRarity currentSpawnableItem = level.spawnableScrap[index];
+            if (currentSpawnableItem.rarity != rarity)
+            {
+                LethalExpansion.DebugLog.LogInfo($"Updated spawn rate from '{currentSpawnableItem.rarity}' to '{rarity}' for scrap '{item.itemName}' on moon '{level.PlanetName}'");
+                level.spawnableScrap[index] = new SpawnableItemWithRarity() { spawnableItem = item, rarity = rarity };
+            }
+        }
+    }
+
+    public static void AddScrap(Scrap scrap)
+    {
+        Item item = VanillaItemInstancier.GetItem(scrap);
+
+        StartOfRound.Instance.allItemsList.itemsList.Add(item);
 
         newScrapsNames.Add(item.itemName);
         AssetGather.Instance.AddScrap(item);
@@ -454,15 +455,15 @@ internal class Terminal_Patch
             .ToArray();
 
         List<SpawnableItemWithRarity> spawnableScrap = new List<SpawnableItemWithRarity>();
-        foreach (SpawnableScrapPair item in moon.SpawnableScrap())
+        foreach (SpawnableScrapPair scrap in moon.SpawnableScrap())
         {
-            if (!AssetGather.Instance.scraps.TryGetValue(item.ObjectName, out Item scrap))
+            if (!AssetGather.Instance.scraps.TryGetValue(scrap.ObjectName, out Item item))
             {
-                LethalExpansion.Log.LogWarning($"Scrap '{item.ObjectName}' on moon '{moon.MoonName}' could not be found, it has not been registered");
+                LethalExpansion.Log.LogWarning($"Scrap '{scrap.ObjectName}' on moon '{moon.MoonName}' could not be found, it has not been registered");
                 continue;
             }
 
-            spawnableScrap.Add(new SpawnableItemWithRarity() { spawnableItem = scrap, rarity = item.SpawnWeight });
+            UpdateOrAddItemSpawnRate(level, item, scrap.SpawnWeight);
         }
         level.spawnableScrap = spawnableScrap;
 

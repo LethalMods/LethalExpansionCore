@@ -38,15 +38,34 @@ public class LethalExpansion : BaseUnityPlugin
 {
     public static readonly Version ModVersion = new Version(PluginInformation.PLUGIN_VERSION);
 
-    public static ConfigEntry<bool> IgnoreRequiredBundles;
-    public static ConfigEntry<bool> UseOriginalLethalExpansion;
-    public static ConfigEntry<bool> LoadDefaultBundles;
+    public static class Settings
+    {
+        public static ConfigEntry<bool> IgnoreRequiredBundles;
+        public static ConfigEntry<bool> UseOriginalLethalExpansion;
+        public static ConfigEntry<bool> LoadDefaultBundles;
+
+        public static ConfigEntry<bool> DebugLogs;
+
+        public static void Bind(ConfigFile config)
+        {
+            // Both Orion and Aquatis "require" templatemod (seemingly they reference scrap added by it)
+            // but it loads and play just fine without it
+            Settings.IgnoreRequiredBundles = config.Bind<bool>("Core", "IgnoreRequiredBundles", true, "Whether or not to allow a bundle to load without its required bundles");
+            // If both LethalExpansion and LethalExpansion(core) are required dependecies for different mods
+            // this will let you choose which one you want to use instead of forcing you to use this one.
+            Settings.UseOriginalLethalExpansion = config.Bind<bool>("Core", "UseOriginalLethalExpansion", false, "Whether or not to use the original LethalExpansion instead of LethalExpansion(core) when they are both loaded");
+            Settings.LoadDefaultBundles = config.Bind<bool>("Core", "LoadDefaultBundles", false, "Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansion(core) are present");
+            
+            Settings.DebugLogs = config.Bind<bool>("Debug", "DebugLogs", false, "Debug logs :D");
+        }
+    }
 
     public static string LethalExpansionPath = null;
 
     public static bool isInGame = false;
 
     public static ManualLogSource Log;
+    public static ManualLogSource DebugLog;
 
     public static NetworkManager networkManager;
 
@@ -96,18 +115,21 @@ public class LethalExpansion : BaseUnityPlugin
         Log = Logger;
         LethalExpansion.Log.LogInfo($"Plugin: {PluginInformation.PLUGIN_NAME} (version: {PluginInformation.PLUGIN_VERSION}) is loading...");
 
-        // Both Orion and Aquatis "require" templatemod (seemingly they reference scrap added by it)
-        // but it loads and play just fine without it
-        IgnoreRequiredBundles = Config.Bind<bool>("Core", "IgnoreRequiredBundles", true, "Whether or not to allow a bundle to load without its required bundles");
-        // If both LethalExpansion and LethalExpansion(core) are required dependecies for different mods
-        // this will let you choose which one you want to use instead of forcing you to use this one.
-        UseOriginalLethalExpansion = Config.Bind<bool>("Core", "UseOriginalLethalExpansion", false, "Whether or not to use the original LethalExpansion instead of LethalExpansion(core) when they are both loaded");
-        LoadDefaultBundles = Config.Bind<bool>("Core", "LoadDefaultBundles", false, "Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansion(core) are present");
+        Settings.Bind(Config);
+
+        if (Settings.DebugLogs.Value)
+        {
+            DebugLog = Log;
+        }
+        else
+        {
+            DebugLog = new ManualLogSource(Log.SourceName);
+        }
 
         Assembly lethalExpansionAssembly = LoadLethalExpansion();
         if (lethalExpansionAssembly != null)
         {
-            if (UseOriginalLethalExpansion.Value)
+            if (Settings.UseOriginalLethalExpansion.Value)
             {
                 LethalExpansion.Log.LogInfo("Using original LethalExpansion instead");
                 return;

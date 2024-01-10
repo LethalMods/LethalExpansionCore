@@ -130,7 +130,7 @@ public class AssetBundlesManager
 
         assetBundles.Add(bundleName, (loadedBundle, modManifest));
 
-        if (!LethalExpansion.LoadDefaultBundles.Value)
+        if (!LethalExpansion.Settings.LoadDefaultBundles.Value)
         {
             if (LethalExpansion.LethalExpansionPath != null && Path.GetDirectoryName(file).StartsWith(LethalExpansion.LethalExpansionPath))
             {
@@ -207,7 +207,7 @@ public class AssetBundlesManager
             List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(scrap.RequiredBundles).ToList();
             if (missingBundles.Count > 0)
             {
-                if (!LethalExpansion.IgnoreRequiredBundles.Value)
+                if (!LethalExpansion.Settings.IgnoreRequiredBundles.Value)
                 {
                     LethalExpansion.Log.LogWarning($"Scrap '{scrap.itemName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
                     return false;
@@ -245,7 +245,7 @@ public class AssetBundlesManager
             List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(moon.RequiredBundles).ToList();
             if (missingBundles.Count > 0)
             {
-                if (!LethalExpansion.IgnoreRequiredBundles.Value)
+                if (!LethalExpansion.Settings.IgnoreRequiredBundles.Value)
                 {
                     LethalExpansion.Log.LogWarning($"Moon '{moon.MoonName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
                     return false;

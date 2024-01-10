@@ -123,6 +123,28 @@ public class AssetGather
             audioClips.Add(name, clip);
         }
     }
+
+    public void AddAudioClip(AudioClip[] clips)
+    {
+        foreach (AudioClip clip in clips)
+        {
+            if (clip != null && !audioClips.ContainsKey(clip.name) && !audioClips.ContainsValue(clip))
+            {
+                audioClips.Add(clip.name, clip);
+            }
+        }
+    }
+
+    public void AddAudioClip(string[] names, AudioClip[] clips)
+    {
+        for (int i = 0; i < clips.Length && i < names.Length; i++)
+        {
+            if (clips[i] != null && !audioClips.ContainsKey(names[i]) && !audioClips.ContainsValue(clips[i]))
+            {
+                audioClips.Add(names[i], clips[i]);
+            }
+        }
+    }
     #endregion
 
     #region Audio Mixers
