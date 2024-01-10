@@ -53,8 +53,8 @@ public class AssetBundlesManager
             return;
         }
 
-        LethalExpansion.Log.LogInfo("Plugins folder found: " + pluginsDirectory.FullName);
-        LethalExpansion.Log.LogInfo("Mod path is: " + modDirectory.FullName);
+        LethalExpansion.Log.LogInfo($"Plugins folder found: {pluginsDirectory.FullName}");
+        LethalExpansion.Log.LogInfo($"Mod path is: {modDirectory.FullName}");
 
         if (modDirectory.FullName == pluginsDirectory.FullName)
         {
@@ -72,14 +72,13 @@ public class AssetBundlesManager
         string bundleFileName = Path.GetFileName(file);
         if (bundleFileName == "lethalexpansion.lem")
         {
-            LethalExpansion.Log.LogWarning($"An AssetBundle with the same name '{bundleFileName}' has already been loaded");
             return;
         }
 
         string bundleName = Path.GetFileNameWithoutExtension(file).ToLower();
         if (assetBundles.ContainsKey(bundleName))
         {
-            LethalExpansion.Log.LogWarning($"File '{bundleFileName}' is not an AssetBundle");
+            LethalExpansion.Log.LogWarning($"An AssetBundle with the same name '{bundleFileName}' has already been loaded");
             return;
         }
 
@@ -98,6 +97,7 @@ public class AssetBundlesManager
 
         if (loadedBundle == null)
         {
+            LethalExpansion.Log.LogWarning($"File '{bundleFileName}' is not an AssetBundle");
             return;
         }
 
@@ -195,36 +195,36 @@ public class AssetBundlesManager
         return false;
     }
 
-    public bool IsScrapCompatible(Scrap newScrap)
+    public bool IsScrapCompatible(Scrap scrap)
     {
-        if (newScrap == null || newScrap.prefab == null)
+        if (scrap == null || scrap.prefab == null)
         {
             return false;
         }
 
-        if (newScrap.RequiredBundles != null)
+        if (scrap.RequiredBundles != null)
         {
-            List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newScrap.RequiredBundles).ToList();
+            List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(scrap.RequiredBundles).ToList();
             if (missingBundles.Count > 0)
             {
                 if (!LethalExpansion.IgnoreRequiredBundles.Value)
                 {
-                    LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
+                    LethalExpansion.Log.LogWarning($"Scrap '{scrap.itemName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
                     return false;
                 }
                 else
                 {
-                    LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' may not work as intended, missing required bundles: {string.Join(", ", missingBundles)}");
+                    LethalExpansion.Log.LogWarning($"Scrap '{scrap.itemName}' may not work as intended, missing required bundles: {string.Join(", ", missingBundles)}");
                 }
             }
         }
 
-        if (newScrap.IncompatibleBundles != null)
+        if (scrap.IncompatibleBundles != null)
         {
-            List<string> incompatibleBundles = AssetBundlesManager.Instance.GetLoadedBundles(newScrap.IncompatibleBundles).ToList();
+            List<string> incompatibleBundles = AssetBundlesManager.Instance.GetLoadedBundles(scrap.IncompatibleBundles).ToList();
             if (incompatibleBundles.Count > 0)
             {
-                LethalExpansion.Log.LogWarning($"Scrap '{newScrap.itemName}' can't be added, incompatible bundles: {string.Join(", ", incompatibleBundles)}");
+                LethalExpansion.Log.LogWarning($"Scrap '{scrap.itemName}' can't be added, incompatible bundles: {string.Join(", ", incompatibleBundles)}");
                 return false;
             }
         }
@@ -232,37 +232,37 @@ public class AssetBundlesManager
         return true;
     }
 
-    public bool IsMoonCompatible(Moon newMoon)
+    public bool IsMoonCompatible(Moon moon)
     {
-        if (newMoon == null || !newMoon.IsEnabled)
+        if (moon == null || !moon.IsEnabled)
         {
             return false;
         }
 
 
-        if (newMoon.RequiredBundles != null)
+        if (moon.RequiredBundles != null)
         {
-            List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(newMoon.RequiredBundles).ToList();
+            List<string> missingBundles = AssetBundlesManager.Instance.GetMissingBundles(moon.RequiredBundles).ToList();
             if (missingBundles.Count > 0)
             {
                 if (!LethalExpansion.IgnoreRequiredBundles.Value)
                 {
-                    LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
+                    LethalExpansion.Log.LogWarning($"Moon '{moon.MoonName}' can't be added, missing required bundles: {string.Join(", ", missingBundles)}");
                     return false;
                 }
                 else
                 {
-                    LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' may not work as intended, missing required bundles: {string.Join(", ", missingBundles)}");
+                    LethalExpansion.Log.LogWarning($"Moon '{moon.MoonName}' may not work as intended, missing required bundles: {string.Join(", ", missingBundles)}");
                 }
             }
         }
 
-        if (newMoon.IncompatibleBundles != null)
+        if (moon.IncompatibleBundles != null)
         {
-            List<string> incompatibleBundles = AssetBundlesManager.Instance.GetLoadedBundles(newMoon.IncompatibleBundles).ToList();
+            List<string> incompatibleBundles = AssetBundlesManager.Instance.GetLoadedBundles(moon.IncompatibleBundles).ToList();
             if (incompatibleBundles.Count > 0)
             {
-                LethalExpansion.Log.LogWarning($"Moon '{newMoon.MoonName}' can't be added, incompatible bundles: {string.Join(", ", incompatibleBundles)}");
+                LethalExpansion.Log.LogWarning($"Moon '{moon.MoonName}' can't be added, incompatible bundles: {string.Join(", ", incompatibleBundles)}");
                 return false;
             }
         }

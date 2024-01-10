@@ -164,7 +164,7 @@ public class LethalExpansion : BaseUnityPlugin
     private int depth = 20;
     private float scale = 20f;
 
-    float[,] GenerateHeights()
+    private float[,] GenerateHeights()
     {
         float[,] heights = new float[width, height];
         for (int x = 0; x < width; x++)
@@ -174,10 +174,11 @@ public class LethalExpansion : BaseUnityPlugin
                 heights[x, y] = CalculateHeight(x, y);
             }
         }
+
         return heights;
     }
 
-    float CalculateHeight(int x, int y)
+    private float CalculateHeight(int x, int y)
     {
         float xCoord = (float)x / width * scale;
         float yCoord = (float)y / height * scale;
@@ -381,7 +382,10 @@ public class LethalExpansion : BaseUnityPlugin
         LethalExpansion.Log.LogInfo($"Moving {entranceTeleports.Length} EntranceTeleport(s) to scene");
         foreach (EntranceTeleport entranceTeleport in entranceTeleports)
         {
-            SceneManager.MoveGameObjectToScene(entranceTeleport.gameObject, scene);
+            if (entranceTeleport.transform.parent == null)
+            {
+                SceneManager.MoveGameObjectToScene(entranceTeleport.gameObject, scene);
+            }
         }
     }
 
