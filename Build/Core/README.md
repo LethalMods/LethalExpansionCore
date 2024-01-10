@@ -15,6 +15,9 @@ The default modules from LethalExpansion are available in a separate package if 
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
 
 ## Changes
+* 1.3.10
+	* Fixed moons with misconfigured entrances not loading properly
+	* Fixed entrance desync on moons with misconfigured entrances
 * 1.3.9
 	* LethalLevelLoader compatibility hotfix
 * 1.3.8
