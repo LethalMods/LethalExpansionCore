@@ -9,7 +9,7 @@ public static class VanillaItemInstancier
 {
     public static Item GetItem(Scrap scrap)
     {
-        return scrap.prefab.GetComponent<GrabbableObject>().itemProperties;
+        return scrap?.prefab?.GetComponent<GrabbableObject>()?.itemProperties;
     }
 
     public static void UpdateAudio(Scrap scrap)

@@ -193,7 +193,19 @@ internal class Terminal_Patch
 
             foreach (Scrap scrap in manifest.scraps)
             {
-                UpdateScrapSpawnRate(scrap);
+                if (!AssetBundlesManager.Instance.IsScrapCompatible(scrap))
+                {
+                    continue;
+                }
+
+                try
+                {
+                    UpdateScrapSpawnRate(scrap);
+                }
+                catch (Exception ex)
+                {
+                    LethalExpansion.Log.LogError($"Failed to update scrap '{scrap.itemName}' spawn rate. {ex}");
+                }
             }
         }
     }
