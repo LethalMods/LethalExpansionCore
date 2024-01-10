@@ -15,6 +15,8 @@ The default modules from LethalExpansion are available in a separate package if 
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
 
 ## Changes
+* 1.3.12
+	* Fixed an issue which resulted in a black screen when starting the game
 * 1.3.11
 	* Full support for the latest LethalSDK version
 	* Fixed custom scrap not always spawning on custom moons
