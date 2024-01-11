@@ -24,23 +24,22 @@ public class DungeonGenerator_Patch
 
         EntranceTeleport[] entrances = UnityEngine.GameObject.FindObjectsOfType<EntranceTeleport>();
 
-        int uniqueEntranceCount = entrances
-            .Select(entrance => entrance.entranceId)
-            .Distinct()
-            .Count();
+        EntranceTeleport[] sortedEntrances = entrances
+            .OrderBy(entrance => entrance.entranceId)
+            .ToArray();
 
-        int duplicateEntranceCount = entrances.Length - uniqueEntranceCount;
-        if (duplicateEntranceCount > 0)
+        for (int i = 0; i < sortedEntrances.Length; i++)
         {
-            LethalExpansion.Log.LogWarning($"Found {duplicateEntranceCount} entrance(s) with the same id as another entrance, this means multiple entrances may take you to the same place");
+            EntranceTeleport entrance = sortedEntrances[i];
+            if (entrance.entranceId != i)
+            {
+                LethalExpansion.Log.LogWarning($"Entrance '{entrance.gameObject}' has an unexpected id, updating id from '{entrance.entranceId}' to '{i}'");
+            }
+
+            entrance.entranceId = i;
         }
 
-        int uniqueFireExits = entrances
-            .Where(entrance => entrance.entranceId != 0)
-            .Distinct()
-            .Count();
-
-        IntRange oldRange = SetFireExitAmount(__instance.DungeonFlow, new IntRange(uniqueFireExits, uniqueFireExits));
+        IntRange oldRange = SetFireExitAmount(__instance.DungeonFlow, new IntRange(entrances.Length - 1, entrances.Length - 1));
         __state = oldRange;
     }
 
@@ -63,6 +62,8 @@ public class DungeonGenerator_Patch
         DungeonFlow.GlobalPropSettings settings = dungeonFlow.GlobalProps
             .Where(props => props.ID == 1231)
             .First();
+
+        LethalExpansion.Log.LogInfo($"Updating fire exit count from ({settings.Count}) to ({newRange})");
 
         IntRange oldRange = settings.Count;
         settings.Count = newRange;
