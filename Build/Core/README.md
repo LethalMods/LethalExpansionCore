@@ -13,8 +13,14 @@ The default modules from LethalExpansion are available in a separate package if 
 * `IgnoreRequiredBundles`: Whether or not to allow a bundle to load without its required bundles, default `true`  
 * `UseOriginalLethalExpansion`: Whether or not to use the original LethalExpansion instead of LethalExpansionCore when they are both loaded, default `false`  
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
+* `ExcludedMoons`: Comma separated list of LethalExpansion based moons to exclude from the game, use `hidden` (without `) to remove all the hidden moons (for better LLL compatibility), default `hidden`  
+* `ExcludedScrap`: Comma separated list of LethalExpansion based scrap to exclude from the game`  
 
 ## Changes
+* 1.3.14
+	* Fixed fire exits not working properly on misconfigured moons
+	* Fixed compatibility with LethalLevelLoader moons (for instance E Gypt)
+	* Added the ability to exclude specific moons and scrap in the config
 * 1.3.13
 	* Fixed vanilla scrap not spawning on custom moons
 * 1.3.12
