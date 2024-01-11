@@ -140,6 +140,10 @@ internal class Terminal_Patch
             return;
         }
 
+        List<string> excludedScrap = LethalExpansion.Settings.ExcludedScrap.Value.Split(',')
+            .Select(excludedScrap => excludedScrap.ToLower())
+            .ToList();
+
         foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
@@ -159,6 +163,12 @@ internal class Terminal_Patch
                 if (newScrapsNames.Contains(scrap.itemName))
                 {
                     LethalExpansion.Log.LogWarning($"Scrap '{scrap.itemName}' has already been added");
+                    continue;
+                }
+
+                if (excludedScrap.Contains(scrap.itemName?.ToLower()))
+                {
+                    LethalExpansion.Log.LogWarning($"Scrap '{scrap.itemName}' was excluded in the config");
                     continue;
                 }
 
@@ -342,6 +352,12 @@ internal class Terminal_Patch
         newMoonsNames.Clear();
         newMoons.Clear();
 
+        List<string> excludedMoons = LethalExpansion.Settings.ExcludedMoons.Value.Split(',')
+            .Select(excludedMoon => excludedMoon.ToLower())
+            .ToList();
+
+        bool excludeHidden = excludedMoons.Contains("hidden");
+
         foreach (KeyValuePair<String, (AssetBundle, ModManifest)> bundleKeyValue in AssetBundlesManager.Instance.contentAssetBundles)
         {
             (AssetBundle bundle, ModManifest manifest) = AssetBundlesManager.Instance.Load(bundleKeyValue.Key);
@@ -361,6 +377,18 @@ internal class Terminal_Patch
                 if (newMoonsNames.Contains(moon.MoonName))
                 {
                     LethalExpansion.Log.LogWarning($"Moon '{moon.MoonName}' has already been added");
+                    continue;
+                }
+
+                if (excludeHidden && moon.IsHidden)
+                {
+                    LethalExpansion.Log.LogWarning($"Hidden moon '{moon.MoonName}' was excluded in the config");
+                    continue;
+                }
+
+                if (excludedMoons.Contains(moon.MoonName?.ToLower()) || excludedMoons.Contains(moon.PlanetName?.ToLower()))
+                {
+                    LethalExpansion.Log.LogWarning($"Moon '{moon.MoonName}' was excluded in the config");
                     continue;
                 }
 

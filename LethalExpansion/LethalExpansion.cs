@@ -46,17 +46,23 @@ public class LethalExpansion : BaseUnityPlugin
 
         public static ConfigEntry<bool> DebugLogs;
 
+        public static ConfigEntry<string> ExcludedMoons;
+        public static ConfigEntry<string> ExcludedScrap;
+
         public static void Bind(ConfigFile config)
         {
             // Both Orion and Aquatis "require" templatemod (seemingly they reference scrap added by it)
             // but it loads and play just fine without it
-            Settings.IgnoreRequiredBundles = config.Bind<bool>("Core", "IgnoreRequiredBundles", true, "Whether or not to allow a bundle to load without its required bundles");
+            IgnoreRequiredBundles = config.Bind<bool>("Core", "IgnoreRequiredBundles", true, "Whether or not to allow a bundle to load without its required bundles");
             // If both LethalExpansion and LethalExpansion(core) are required dependecies for different mods
             // this will let you choose which one you want to use instead of forcing you to use this one.
-            Settings.UseOriginalLethalExpansion = config.Bind<bool>("Core", "UseOriginalLethalExpansion", false, "Whether or not to use the original LethalExpansion instead of LethalExpansion(core) when they are both loaded");
-            Settings.LoadDefaultBundles = config.Bind<bool>("Core", "LoadDefaultBundles", false, "Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansion(core) are present");
-            
-            Settings.DebugLogs = config.Bind<bool>("Debug", "DebugLogs", false, "Debug logs :D");
+            UseOriginalLethalExpansion = config.Bind<bool>("Core", "UseOriginalLethalExpansion", false, "Whether or not to use the original LethalExpansion instead of LethalExpansion(core) when they are both loaded");
+            LoadDefaultBundles = config.Bind<bool>("Core", "LoadDefaultBundles", false, "Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansion(core) are present");
+
+            ExcludedMoons = config.Bind<string>("Moons & Scrap", "ExcludedMoons", "hidden", "Comma separated list of LethalExpansion based moons to exclude from the game, use `hidden` (without `) to remove all the hidden moons (better LLL compatibility)");
+            ExcludedScrap = config.Bind<string>("Moons & Scrap", "ExcludedScrap", "", "Comma separated list of LethalExpansion based scrap to exclude from the game");
+
+            DebugLogs = config.Bind<bool>("Debug", "DebugLogs", false, "Debug logs :D");
         }
     }
 
@@ -305,9 +311,18 @@ public class LethalExpansion : BaseUnityPlugin
 
     void OnInitSceneLaunchOptionsLoaded(Scene scene)
     {
+        terrainFixer.SetActive(false);
+
+        // Not our moon not our concern.
+        bool isCustom = Terminal_Patch.newMoons.ContainsKey(RoundManager.Instance.currentLevel.levelID);
+        if (!isCustom)
+        {
+            LethalExpansion.Log.LogInfo($"Skipped custom moon loading in InitSceneLaunchOptions for moon '{RoundManager.Instance.currentLevel.PlanetName}', it is not our moon");
+            return;
+        }
+
         LethalExpansion.Log.LogInfo("OnInitSceneLaunchOptionsLoaded");
 
-        terrainFixer.SetActive(false);
         foreach (GameObject obj in scene.GetRootGameObjects())
         {
             obj.SetActive(false);
