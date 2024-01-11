@@ -10,7 +10,6 @@ using UnityEngine;
 
 namespace LethalExpansionCore.Patches;
 
-[HarmonyPatch(typeof(Terminal))]
 internal class Terminal_Patch
 {
     private static TerminalKeyword[] defaultTerminalKeywords;
@@ -466,7 +465,7 @@ internal class Terminal_Patch
             .Select(dungeonFlow => new IntWithRarity() { id = dungeonFlow.ID, rarity = dungeonFlow.Rarity })
             .ToArray();
 
-        List<SpawnableItemWithRarity> spawnableScrap = new List<SpawnableItemWithRarity>();
+        level.spawnableScrap = new List<SpawnableItemWithRarity>();
         foreach (SpawnableScrapPair scrap in moon.SpawnableScrap())
         {
             if (!AssetGather.Instance.scraps.TryGetValue(scrap.ObjectName, out Item item))
@@ -477,7 +476,6 @@ internal class Terminal_Patch
 
             UpdateOrAddItemSpawnRate(level, item, scrap.SpawnWeight);
         }
-        level.spawnableScrap = spawnableScrap;
 
         level.minScrap = moon.MinScrap;
         level.maxScrap = moon.MaxScrap;
@@ -674,7 +672,7 @@ internal class Terminal_Patch
         }
     }
 
-    [HarmonyPatch("TextPostProcess")]
+    [HarmonyPatch(typeof(Terminal), "TextPostProcess")]
     [HarmonyPostfix]
     private static void TextPostProcess_Postfix(Terminal __instance, ref string __result)
     {
