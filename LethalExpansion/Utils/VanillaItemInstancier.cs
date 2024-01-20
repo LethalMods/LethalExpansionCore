@@ -81,6 +81,8 @@ public static class VanillaItemInstancier
             return;
         }
 
+        noisemaker.noiseAudio.outputAudioMixerGroup = AssetGather.Instance.GetDiageticMasterAudioMixer();
+
         noisemaker.noiseSFX = GetAudioClips(scrap.noiseSFX, "ClownHorn1");
         noisemaker.noiseSFXFar = GetAudioClips(scrap.noiseSFXFar, "ClownHornFar");
     }
@@ -138,6 +140,10 @@ public static class VanillaItemInstancier
 
     public static void AddItemToScrap(Scrap scrap, Sprite scrapSprite)
     {
+        AudioSource audioSource = scrap.prefab.AddComponent<AudioSource>();
+        audioSource.playOnAwake = false;
+        audioSource.spatialBlend = 1f;
+        
         Item item = ScriptableObject.CreateInstance<Item>();
         item.name = scrap.name;
         item.itemName = scrap.itemName;
@@ -176,10 +182,6 @@ public static class VanillaItemInstancier
         grabbableObject.grabbable = true;
         grabbableObject.itemProperties = item;
         grabbableObject.mainObjectRenderer = scrap.prefab.GetComponent<MeshRenderer>();
-
-        AudioSource audioSource = scrap.prefab.AddComponent<AudioSource>();
-        audioSource.playOnAwake = false;
-        audioSource.spatialBlend = 1f;
 
         Transform scanNodeObject = scrap.prefab.transform.Find("ScanNode");
         if (scanNodeObject != null)
@@ -243,13 +245,58 @@ public static class VanillaItemInstancier
                 return flashlight;
             case ScrapType.Noisemaker:
                 NoisemakerProp noisemaker = scrap.prefab.AddComponent<NoisemakerProp>();
-                noisemaker.noiseAudio = scrap.noiseAudio ?? scrap.prefab.GetComponent<AudioSource>() ?? scrap.prefab.AddComponent<AudioSource>();
+                noisemaker.noiseAudio = scrap.noiseAudio;
+                if (noisemaker.noiseAudio == null)
+                {
+                    noisemaker.noiseAudio = scrap.prefab.AddComponent<AudioSource>();
+                
+                    // Configure AudioSource
+                    noisemaker.noiseAudio.playOnAwake = false;
+                    noisemaker.noiseAudio.priority = 128;
+                    noisemaker.noiseAudio.pitch = 1f;
+                    noisemaker.noiseAudio.panStereo = 0f;
+                    noisemaker.noiseAudio.spatialBlend = 1f;
+                    noisemaker.noiseAudio.reverbZoneMix = 1f;
+                
+                    // Configure 3D Sound Settings
+                    noisemaker.noiseAudio.dopplerLevel = 4f;
+                    noisemaker.noiseAudio.spread = 26f;
+                    noisemaker.noiseAudio.minDistance = 4f;
+                    noisemaker.noiseAudio.maxDistance = 21f;
+                    noisemaker.noiseAudio.rolloffMode = AudioRolloffMode.Linear;
+                }
                 noisemaker.noiseAudioFar = scrap.noiseAudioFar;
+                if (noisemaker.noiseAudioFar == null)
+                {
+                    noisemaker.noiseAudioFar = scrap.prefab.AddComponent<AudioSource>();
+                
+                    // Configure AudioSource
+                    noisemaker.noiseAudioFar.playOnAwake = true;
+                    noisemaker.noiseAudioFar.priority = 128;
+                    noisemaker.noiseAudioFar.pitch = 1f;
+                    noisemaker.noiseAudioFar.panStereo = 0f;
+                    noisemaker.noiseAudioFar.spatialBlend = 1f;
+                    noisemaker.noiseAudioFar.reverbZoneMix = 1f;
+                
+                    // Configure 3D Sound Settings
+                    noisemaker.noiseAudioFar.dopplerLevel = 1.4f;
+                    noisemaker.noiseAudioFar.spread = 87f;
+                    noisemaker.noiseAudioFar.maxDistance = 75f;
+                    noisemaker.noiseAudioFar.rolloffMode = AudioRolloffMode.Custom;
+                    noisemaker.noiseAudioFar.SetCustomCurve(AudioSourceCurveType.CustomRolloff, new AnimationCurve(new Keyframe[] {
+                        new Keyframe(18f, 0f, 0f, 0.065f),
+                        new Keyframe(25.59f, 0.866f, -0.01f, -0.01f),
+                        new Keyframe(87f, 0f, -0.018f, 0f)
+                    }));
+                
+                }
                 noisemaker.noiseRange = scrap.noiseRange;
                 noisemaker.maxLoudness = scrap.maxLoudness;
                 noisemaker.minLoudness = scrap.minLoudness;
+                noisemaker.minPitch = scrap.minPitch;
                 noisemaker.maxPitch = scrap.maxPitch;
                 noisemaker.triggerAnimator = scrap.triggerAnimator;
+                item.syncUseFunction = true;
                 return noisemaker;
             case ScrapType.WhoopieCushion:
                 WhoopieCushionItem whoopieCushion = scrap.prefab.AddComponent<WhoopieCushionItem>();
