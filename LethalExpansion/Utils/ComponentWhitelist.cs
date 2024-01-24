@@ -180,7 +180,10 @@ public static class ComponentWhitelist
         typeof(ParticleSystemRenderer),
         typeof(ParticleSystemForceField),
         //Video
-        typeof(VideoPlayer)
+        typeof(VideoPlayer),
+        //LethalSDK
+        typeof(SI_DamagePlayer),
+        typeof(SI_AudioOutputInterface)
     };
 
     public static void CheckAndRemoveIllegalComponents(Transform prefab, List<Type> whitelist)
