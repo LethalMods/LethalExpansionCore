@@ -13,8 +13,8 @@ The default modules from LethalExpansion are available in a separate package if 
 * `IgnoreRequiredBundles`: Whether or not to allow a bundle to load without its required bundles, default `true`  
 * `UseOriginalLethalExpansion`: Whether or not to use the original LethalExpansion instead of LethalExpansionCore when they are both loaded, default `false`  
 * `LoadDefaultBundles`: Whether or not to load the default bundles from LethalExpansion when both LethalExpansion and LethalExpansionCore are present, default `false`  
-* `ExcludedMoons`: Comma separated list of LethalExpansion based moons to exclude from the game, use `hidden` (without `) to remove all the hidden moons (for better LLL compatibility), default `hidden`  
-* `ExcludedScrap`: Comma separated list of LethalExpansion based scrap to exclude from the game`  
+* `ExcludedMoons`: Comma separated list of LethalExpansion based moons to exclude from the game, use `hidden` to remove all the hidden moons (for better LLL compatibility), default `hidden`  
+* `ExcludedScrap`: Comma separated list of LethalExpansion based scrap to exclude from the game  
 
 ## Changes
 * 1.3.15
