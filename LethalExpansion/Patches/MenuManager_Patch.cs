@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+using LethalExpansionCore;
+using HarmonyLib;
 
 namespace LethalExpansionCore.Patches;
 
@@ -9,10 +10,12 @@ internal class MenuManager_Patch
     [HarmonyPostfix]
     public static void Awake_Postfix(MenuManager __instance)
     {
-        if (__instance.versionNumberText != null)
-        {
-            __instance.versionNumberText.enableWordWrapping = false;
-            __instance.versionNumberText.text += $"     LE(core)v{LethalExpansion.ModVersion}";
+        if (LethalExpansion.Settings.ShowVersionNumberOnMainMenu.Value) {
+            if (__instance.versionNumberText != null)
+            {
+                __instance.versionNumberText.enableWordWrapping = false;
+                __instance.versionNumberText.text += $"     LE(core)v{LethalExpansion.ModVersion}";
+            }
         }
     }
 }
