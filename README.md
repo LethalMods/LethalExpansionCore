@@ -20,6 +20,9 @@ The default modules from LethalExpansion are also available in a separate packag
 * `ExcludedScrap`: Comma separated list of LethalExpansion based scrap to exclude from the game`  
 
 ## Changes
+* 1.3.15
+	* Fixed noisemaker (Thanks BuffMage)
+	* Added a new setting `ShowVersionNumberOnMainMenu` (Thanks Masterscape)
 * 1.3.14
 	* Fixed fire exits not working properly on misconfigured moons
 	* Fixed compatibility with LethalLevelLoader moons (for instance E Gypt)
