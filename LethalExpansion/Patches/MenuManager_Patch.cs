@@ -10,7 +10,7 @@ internal class MenuManager_Patch
     [HarmonyPostfix]
     public static void Awake_Postfix(MenuManager __instance)
     {
-        if(LethalExpansion.Settings.ShowVersionNumberOnMainMenu.Value) {
+        if (LethalExpansion.Settings.ShowVersionNumberOnMainMenu.Value) {
             if (__instance.versionNumberText != null)
             {
                 __instance.versionNumberText.enableWordWrapping = false;
