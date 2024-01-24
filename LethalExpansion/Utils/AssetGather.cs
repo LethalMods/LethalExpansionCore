@@ -17,6 +17,7 @@ public class AssetGather
             {
                 _instance = new AssetGather();
             }
+
             return _instance;
         }
     }
@@ -107,147 +108,120 @@ public class AssetGather
         return tuple.Item2.First(a => a.name == "Master");
     }
 
-    #region Audio Clips
+    private void Add<T>(Dictionary<string, T> dictionary, string key, T value)
+    {
+        if (key == null || value == null)
+        {
+            return;
+        }
+
+        if (dictionary.ContainsKey(key) || dictionary.ContainsValue(value))
+        {
+            return;
+        }
+
+        dictionary[key] = value;
+    }
+
     public void AddAudioClip(AudioClip clip)
     {
-        if (clip != null && !audioClips.ContainsKey(clip.name) && !audioClips.ContainsValue(clip))
-        {
-            audioClips.Add(clip.name, clip);
-        }
+        AddAudioClip(clip?.name, clip);
     }
 
     public void AddAudioClip(string name, AudioClip clip)
     {
-        if (clip != null && !audioClips.ContainsKey(name) && !audioClips.ContainsValue(clip))
-        {
-            audioClips.Add(name, clip);
-        }
+        Add(audioClips, name, clip);
     }
 
     public void AddAudioClip(AudioClip[] clips)
     {
+        if (clips == null)
+        {
+            return;
+        }
+
         foreach (AudioClip clip in clips)
         {
-            if (clip != null && !audioClips.ContainsKey(clip.name) && !audioClips.ContainsValue(clip))
-            {
-                audioClips.Add(clip.name, clip);
-            }
+            AddAudioClip(clip);
         }
     }
 
     public void AddAudioClip(string[] names, AudioClip[] clips)
     {
+        if (names == null || clips == null)
+        {
+            return;
+        }
+
         for (int i = 0; i < clips.Length && i < names.Length; i++)
         {
-            if (clips[i] != null && !audioClips.ContainsKey(names[i]) && !audioClips.ContainsValue(clips[i]))
-            {
-                audioClips.Add(names[i], clips[i]);
-            }
+            AddAudioClip(names[i], clips[i]);
         }
     }
-    #endregion
 
-    #region Audio Mixers
-    public void AddAudioMixer(AudioMixer mixer)
+    public void AddAudioMixer(AudioMixer audioMixer)
     {
-        if (mixer != null && !audioMixers.ContainsKey(mixer.name))
+        if (audioMixer == null || audioMixers.ContainsKey(audioMixer.name))
         {
-            List<AudioMixerGroup> tmp = new List<AudioMixerGroup>();
-            foreach (var group in mixer.FindMatchingGroups(string.Empty))
-            {
-                if (group != null && !tmp.Contains(group))
-                {
-                    tmp.Add(group);
-                }
-            }
-            audioMixers.Add(mixer.name, (mixer, tmp.ToArray()));
+            return;
         }
-    }
-    #endregion
 
-    #region Planet Prefabs
+        List<AudioMixerGroup> audioMixerGroups = new List<AudioMixerGroup>();
+        foreach (AudioMixerGroup audioMixerGroup in audioMixer.FindMatchingGroups(string.Empty))
+        {
+            if (audioMixerGroup == null || audioMixerGroups.Contains(audioMixerGroup))
+            {
+                continue;
+            }
+
+            audioMixerGroups.Add(audioMixerGroup);
+        }
+
+        Add(audioMixers, audioMixer.name, (audioMixer, audioMixerGroups.ToArray()));
+    }
+
     public void AddPlanetPrefabs(GameObject prefab)
     {
-        if (prefab != null && !planetPrefabs.ContainsKey(prefab.name) && !planetPrefabs.ContainsValue(prefab))
-        {
-            planetPrefabs.Add(prefab.name, prefab);
-        }
+        AddPlanetPrefabs(prefab?.name, prefab);
     }
 
     public void AddPlanetPrefabs(string name, GameObject prefab)
     {
-        if (prefab != null && !planetPrefabs.ContainsKey(name) && !planetPrefabs.ContainsValue(prefab))
-        {
-            planetPrefabs.Add(name, prefab);
-        }
+        Add(planetPrefabs, name, prefab);
     }
-    #endregion
 
-    #region Map Objects
     public void AddMapObjects(GameObject mapObject)
     {
-        if (mapObject != null && !mapObjects.ContainsKey(mapObject.name) && !mapObjects.ContainsValue(mapObject))
-        {
-            mapObjects.Add(mapObject.name, mapObject);
-        }
+        Add(mapObjects, mapObject?.name, mapObject);
     }
-    #endregion
 
-    #region Outside Objects
     public void AddOutsideObject(SpawnableOutsideObject outsideObject)
     {
-        if (outsideObject != null && !outsideObjects.ContainsKey(outsideObject.name) && !outsideObjects.ContainsValue(outsideObject))
-        {
-            outsideObjects.Add(outsideObject.name, outsideObject);
-        }
+        Add(outsideObjects, outsideObject?.name, outsideObject);
     }
-    #endregion
 
-    #region Scraps
     public void AddScrap(Item scrap)
     {
-        if (scrap != null && !scraps.ContainsKey(scrap.name) && !scraps.ContainsValue(scrap))
-        {
-            scraps.Add(scrap.name, scrap);
-        }
+        Add(scraps, scrap?.name, scrap);
     }
-    #endregion
 
-    #region Level Ambiances
     public void AddLevelAmbiances(LevelAmbienceLibrary levelAmbiance)
     {
-        if (levelAmbiance != null && !levelAmbiances.ContainsKey(levelAmbiance.name) && !levelAmbiances.ContainsValue(levelAmbiance))
-        {
-            levelAmbiances.Add(levelAmbiance.name, levelAmbiance);
-        }
+        Add(levelAmbiances, levelAmbiance?.name, levelAmbiance);
     }
-    #endregion
 
-    #region Enemies
-    public void AddEnemies(EnemyType enemie)
+    public void AddEnemies(EnemyType enemy)
     {
-        if (enemie != null && !enemies.ContainsKey(enemie.name) && !enemies.ContainsValue(enemie))
-        {
-            enemies.Add(enemie.name, enemie);
-        }
+        Add(enemies, enemy?.name, enemy);
     }
-    #endregion
 
-    #region Sprites
     public void AddSprites(Sprite sprite)
     {
-        if (sprite != null && !sprites.ContainsKey(sprite.name) && !sprites.ContainsValue(sprite))
-        {
-            sprites.Add(sprite.name, sprite);
-        }
+        AddSprites(sprite?.name, sprite);
     }
 
     public void AddSprites(string name, Sprite sprite)
     {
-        if (sprite != null && !sprites.ContainsKey(name) && !sprites.ContainsValue(sprite))
-        {
-            sprites.Add(name, sprite);
-        }
+        Add(sprites, name, sprite);
     }
-    #endregion
 }
